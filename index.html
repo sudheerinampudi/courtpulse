@@ -1,163 +1,56 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CourtPulse Prototype</title>
+<title>CourtPulse: who's playing near you</title>
 <link rel="icon" href="icon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--page:#F6F8EF;--ring:#DCE5D0;--ink:#15332B;--muted:#5E7168;--outline:#B4C4AA;--lime:#D9F24A;--limeink:#0F2A24;--green:#1F6B3F;--empty:#D3DCC8;--live:#1F9D55}
-*{box-sizing:border-box}body{margin:0;background:#E9EEDF;color:var(--ink);font-family:Inter,system-ui,sans-serif}
-h1,h2,h3,.sg{font-family:'Space Grotesk',sans-serif}
-.top{max-width:1000px;margin:0 auto;padding:24px 16px 8px}
-.top h1{margin:0;font-size:28px}.top p{margin:4px 0 14px;color:var(--muted);font-size:14px}
-.tabs{display:flex;gap:6px;flex-wrap:wrap}
-.tabs button{border:1px solid var(--outline);background:#fff;border-radius:22px;padding:10px 16px;font:600 14px Inter;color:var(--ink);cursor:pointer;min-height:44px}
-.tabs button[aria-selected=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.stage{display:flex;justify-content:center;padding:16px}
-.phone{width:390px;max-width:100%;height:860px;background:var(--page);border-radius:36px;box-shadow:0 0 0 10px #15332B,0 20px 50px rgba(0,0,0,.25);position:relative;overflow:hidden}
-.screen{position:absolute;inset:0;padding:22px 20px 24px;display:flex;flex-direction:column;gap:14px;overflow:auto}
-.card{background:#fff;box-shadow:0 0 0 1px var(--ring);border-radius:18px;padding:14px 16px}
-.btn{min-height:52px;border:none;border-radius:16px;background:var(--lime);color:var(--limeink);font:700 16px 'Space Grotesk';cursor:pointer;width:100%}
-.btn.alt{background:#fff;border:1px solid var(--outline);color:var(--ink);font:600 14px Inter}
+:root{--page:#F6F8EF;--ring:#DCE5D0;--ink:#15332B;--muted:#5E7168;--outline:#B4C4AA;--lime:#D9F24A;--green:#1F6B3F;--empty:#D3DCC8;--live:#1F9D55}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+.sg,h1{font-family:'Space Grotesk',sans-serif}
+main{max-width:440px;margin:0 auto;padding:20px 20px 40px;display:flex;flex-direction:column;gap:14px;min-height:100vh}
+.head{display:flex;align-items:center;gap:10px}.head img{border-radius:9px}
 .seg{display:flex;background:#fff;box-shadow:0 0 0 1px var(--ring);border-radius:24px;padding:4px;gap:4px}
 .seg button{flex:1;min-height:44px;border:none;border-radius:20px;background:transparent;color:var(--ink);font:600 14px Inter;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
 .seg button[aria-pressed=true]{background:var(--ink);color:#fff}
-.muted{color:var(--muted);font-size:13px}
-input{width:100%;min-height:48px;border:1px solid var(--outline);border-radius:12px;padding:0 14px;font:400 15px Inter;background:#fff;color:var(--ink)}
-label{font-size:12px;color:var(--muted);display:block;margin:0 0 4px}
-.fld{display:flex;flex-direction:column}
-.row{display:flex;gap:10px}
+.card{background:#fff;box-shadow:0 0 0 1px var(--ring);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.muted{color:var(--muted);font-size:13px}.big{font:700 64px/1 'Space Grotesk';color:var(--green);letter-spacing:-.03em}
+.num{font:700 30px 'Space Grotesk';color:var(--green)}
 .bar{height:8px;border-radius:4px;background:var(--empty);overflow:hidden}.bar i{display:block;height:100%;background:var(--green)}
-.pill{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:24px;font:600 14px Inter;transition:opacity .5s;z-index:5}
-.step{display:flex;align-items:center;justify-content:space-between}
-.step .n{font:700 60px 'Space Grotesk';color:var(--green);letter-spacing:-.03em}
-.step button{width:56px;height:56px;border-radius:50%;border:1px solid var(--outline);background:#fff;font:28px 'Space Grotesk';cursor:pointer;color:var(--ink)}
-.step button.p{background:var(--lime);border:none;font-weight:700}.step button:disabled{opacity:.35}
-.map{position:relative;flex:1;min-height:380px;background:#E6EFDC;border-radius:18px;overflow:hidden;box-shadow:0 0 0 1px var(--ring)}
-.pin{position:absolute;transform:translate(-50%,-50%);background:var(--lime);color:var(--limeink);font:700 14px 'Space Grotesk';border-radius:18px;padding:6px 12px;box-shadow:0 2px 6px rgba(0,0,0,.2);border:0;cursor:pointer}
-.web{width:100%;max-width:440px;margin:0 auto;background:var(--page);border-radius:20px;box-shadow:0 0 0 1px var(--ring);padding:24px 20px;min-height:700px;position:relative;display:flex;flex-direction:column;gap:14px}
-.sign{width:min(816px,100%);background:#fff;padding:56px 48px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.15);display:flex;flex-direction:column;align-items:center;gap:18px}
-.sign h2{font-size:52px;margin:0;line-height:1.05}
-[hidden]{display:none!important}
-</style></head><body>
-<div class="top"><h1 style="display:flex;align-items:center;gap:12px"><img src="icon.png" alt="" width="48" height="48" style="border-radius:11px">CourtPulse</h1><p>Clickable prototype of the pickleball and tennis check-in app, the QR web page and the park sign. Sample data only.</p>
-<div class="tabs" role="tablist" id="tabs"></div></div>
-<div class="stage" id="stage"></div>
+.btn{min-height:52px;border:none;border-radius:16px;background:var(--lime);color:#0F2A24;font:700 16px 'Space Grotesk';cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--live);font-weight:600}.live:before{content:'';width:8px;height:8px;border-radius:50%;background:var(--live)}
+a.lnk{color:var(--green);font:600 13px Inter}
+</style></head><body><main id="app"></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
+const SUPABASE_URL = 'https://wjedvyqtqgvclxxsxyox.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_EDOf8NAuJK8AbWhDLKzjmQ_gNcBpSb6';
 const PB='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#FFA03A" stroke="#15332B" stroke-width="1.5"/><g fill="#15332B"><circle cx="12" cy="7" r="1.4"/><circle cx="7.4" cy="10.4" r="1.4"/><circle cx="16.6" cy="10.4" r="1.4"/><circle cx="9.2" cy="15.8" r="1.4"/><circle cx="14.8" cy="15.8" r="1.4"/><circle cx="12" cy="12" r="1.4"/></g></svg>';
 const TN='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#D5E83A" stroke="#15332B" stroke-width="1.5"/><path d="M4.4 6.6c4.4 3.2 4.4 7.6 0 10.8M19.6 6.6c-4.4 3.2-4.4 7.6 0 10.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>';
-const DATA={pickleball:[['Lakeside Park',18,.8,8,34,18],['Heritage Courts',14,1.6,6,41,60],['Civic Center',9,3.1,4,66,35],['Oak Grove',6,4.2,4,24,75],['Riverside',0,8.7,2,78,70]],
-tennis:[['Heritage Tennis Center',24,1.6,6,41,60],['Lakeside Park',11,.8,4,34,18],['Oak Grove',7,4.2,3,24,75],['Civic Center',6,3.1,3,66,35],['Riverside',0,8.7,2,78,70]]};
-const REPORTS=[['Maria S.','4 min ago',18,3],['Dev P.','6 min ago',20,2],['Jordan K.','7 min ago',16,4],['Alex T.','9 min ago',18,3],['Priya N.','9 min ago',17,2]];
-let P={sport:'pickleball',radius:5};
-try{Object.assign(P,JSON.parse(localStorage.getItem('cn-prefs')||'{}'))}catch(e){}
-const save=()=>{try{localStorage.setItem('cn-prefs',JSON.stringify(P))}catch(e){}};
-const $=(s,r=document)=>r.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ball=s=>s==='tennis'?TN:PB;
-const lim=s=>{const c=s==='tennis'?6:8;return{c,mp:c*4,mw:c*2}};
-function sportSeg(id){return `<div class="seg" role="group" aria-label="Sport"><button aria-pressed="${P.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${P.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>`}
-function bindSport(root,after){root.querySelectorAll('[data-sport]').forEach(b=>b.onclick=()=>{P.sport=b.dataset.sport;save();after()})}
-
-/* ---------- App ---------- */
-const A={screen:'signin',view:'list',park:0,tab:'create',vstep:false,pw:false,players:12,waiting:2,toast:false,sheet:false};
-function appRender(){
- const host=$('#phone');let h='';
- if(A.screen==='signin')h=signin();
- else if(A.screen==='home')h=home();
- else if(A.screen==='checkin')h=checkin();
- else if(A.screen==='park')h=park();
- host.innerHTML=h;wire(host);
+const app=document.getElementById('app');
+let prefs={sport:'pickleball'};try{Object.assign(prefs,JSON.parse(localStorage.getItem('cn-prefs')||'{}'))}catch(e){}
+if(prefs.sport!=='tennis')prefs.sport='pickleball';
+const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,sport:prefs.sport}))}catch(e){}};
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let rows=null,err='',updated=null;
+async function load(){
+  const {data,error}=await sb.rpc('park_counts',{p_sport:prefs.sport});
+  if(error){err=error.message;rows=rows||[]}else{err='';rows=data;updated=new Date()}
+  render();
 }
-function social(){return ['Google','Facebook','Apple'].map(n=>`<button class="btn alt" data-go="home">Continue with ${n}</button>`).join('')}
-function signin(){
- const f=A.tab==='create';
- if(A.vstep)return `<div class="screen"><h1 style="font-size:28px;margin:30px 0 0">Check your email</h1><div class="muted">We sent a 6-digit code to confirm the address is yours. (Prototype: any 6 digits work.)</div><input id="code" inputmode="numeric" maxlength="6" placeholder="123456" aria-label="Verification code"><button class="btn" id="verify">Verify and continue</button><button class="btn alt" id="chg">Change email</button></div>`;
- return `<div class="screen"><div style="display:flex;gap:8px;align-items:center;margin-top:14px"><img src="icon.png" alt="" width="36" height="36" style="border-radius:9px"><b class="sg" style="font-size:20px">CourtPulse</b></div><h1 style="font-size:28px;margin:6px 0 0">Sign in to check in</h1>${social()}<div class="muted" style="text-align:center">or use your own account</div>
- <div class="seg"><button aria-pressed="${f}" data-tab="create">Create account</button><button aria-pressed="${!f}" data-tab="login">Log in</button></div>
- ${f?`<div class="row"><div class="fld"><label>First name</label><input></div><div class="fld"><label>Last name</label><input></div></div>`:''}
- <div class="fld"><label>Email</label><input type="email"></div>
- <div class="fld"><label>Password</label><div style="position:relative"><input type="${A.pw?'text':'password'}" value=""><button id="showpw" style="position:absolute;right:6px;top:6px;height:36px;border:none;background:none;font:600 13px Inter;color:var(--green);cursor:pointer">${A.pw?'Hide':'Show'}</button></div></div>
- <button class="btn" id="submit">${f?'Create account':'Log in'}</button>${f?'':'<div class="muted" style="text-align:center">Forgot password?</div>'}
- <div class="muted" style="text-align:center">We only collect first name, last name and email.</div></div>`;
+function render(){
+  const tot=(rows||[]).reduce((a,r)=>a+Number(r.avg_playing),0);
+  let h=`<div class="head"><img src="icon.png" alt="" width="36" height="36"><b class="sg" style="font-size:20px">CourtPulse</b></div>
+  <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>
+  <div><div class="muted"><span class="live">Live</span> · playing now at all parks</div><div class="big">${rows?tot:'…'}</div></div>`;
+  if(err)h+=`<div class="card" role="alert"><b>Couldn't load counts</b><div class="muted">${esc(err)}</div></div>`;
+  else if(rows&&!rows.length)h+='<div class="muted">No parks for this sport yet.</div>';
+  (rows||[]).forEach(r=>{const mx=r.courts*4,n=Number(r.avg_playing);
+    h+=`<a class="card" href="checkin.html?park=${encodeURIComponent(r.slug)}"><div class="row"><b class="sg" style="font-size:16px">${esc(r.name)}</b><span class="num">${n}</span></div><div class="muted">${r.courts} courts · ${Number(r.avg_waiting)} waiting · ${Number(r.report_count)?Number(r.report_count)+' report'+(r.report_count==1?'':'s')+' in last 10 min':'no recent reports'}</div><div class="bar"><i style="width:${Math.min(100,n/mx*100)}%"></i></div></a>`});
+  h+=`<a class="btn" href="checkin.html?park=lakeside">Check in</a><div class="muted" style="text-align:center">Averages of player reports from the last 10 minutes. Refreshes every 30 seconds.</div><div class="muted" style="text-align:center"><a class="lnk" href="prototype.html">Design prototype</a></div>`;
+  app.innerHTML=h;
+  app.querySelectorAll('[data-sport]').forEach(b=>b.onclick=()=>{prefs.sport=b.dataset.sport;savePrefs();rows=null;render();load()});
 }
-function home(){
- const list=DATA[P.sport].filter(p=>p[2]<=P.radius);const tot=list.reduce((a,p)=>a+p[1],0);
- const cards=list.map((p,i)=>{const mx=lim(P.sport).mp;return `<button class="card" data-park="${i}" style="text-align:left;cursor:pointer;border:none;width:100%"><div class="step"><b class="sg" style="font-size:16px">${esc(p[0])}</b><span class="sg" style="font-size:28px;font-weight:700;color:var(--green)">${p[1]}</span></div><div class="muted">${p[2]} mi · ${p[3]} courts</div><div class="bar" style="margin-top:8px"><i style="width:${Math.min(100,p[1]/(p[3]*4)*100)}%"></i></div></button>`}).join('')||'<div class="muted">No parks in this range.</div>';
- const pins=list.map((p,i)=>`<button class="pin" style="left:${p[4]}%;top:${p[5]}%" data-park="${i}">${p[1]}</button>`).join('');
- return `<div class="screen">${sportSeg()}
- <div><div class="muted">${A.toastDummy||''}Playing now nearby</div><div class="sg" style="font-size:64px;font-weight:700;line-height:1;color:var(--green)">${tot}</div></div>
- <div class="row" style="align-items:center;justify-content:space-between"><button class="btn alt" id="radius" style="width:auto;padding:0 16px;min-height:44px;border-radius:22px">Within ${P.radius} mi ▾</button><div class="seg" style="width:auto"><button aria-pressed="${A.view==='list'}" data-view="list" aria-label="List" style="padding:0 14px">List</button><button aria-pressed="${A.view==='map'}" data-view="map" aria-label="Map" style="padding:0 14px">Map</button></div></div>
- ${A.view==='list'?`<div style="display:flex;flex-direction:column;gap:10px">${cards}</div>`:`<div class="map"><div style="position:absolute;left:0;right:0;top:48%;height:10px;background:#fff"></div><div style="position:absolute;top:0;bottom:0;left:55%;width:10px;background:#F8FAF1"></div><div style="position:absolute;left:8%;top:62%;width:34%;height:26%;background:#BFE0EA;border-radius:40%"></div><div style="position:absolute;left:46%;top:8%;width:12px;height:12px;border-radius:50%;background:#5CA8FF;box-shadow:0 0 0 6px rgba(92,168,255,.3)"></div>${pins}</div>`}
- <button class="btn" data-go="checkin" style="margin-top:auto">Check in</button>
- ${A.sheet?`<div style="position:absolute;inset:0;background:rgba(21,51,43,.35);display:flex;align-items:flex-end"><div style="background:#fff;width:100%;border-radius:24px 24px 0 0;padding:20px;display:flex;flex-direction:column;gap:10px"><b class="sg" style="font-size:18px">Show parks within</b><div class="seg">${[1,2,5,10].map(r=>`<button aria-pressed="${P.radius===r}" data-r="${r}">${r} mi</button>`).join('')}</div></div></div>`:''}
- ${A.toast?`<div class="pill" id="pill">Update shared</div>`:''}</div>`;
-}
-function checkin(){const L=lim(P.sport),pk=DATA[P.sport][0];
- const st=(k,mx,t,sub,p)=>`<div class="card" style="display:flex;flex-direction:column;gap:8px"><b class="sg" style="font-size:18px">${t}</b><div class="muted">${sub}</div><div class="step"><button data-d="${k}-1" aria-label="fewer">−</button><span class="n" ${k==='waiting'?'style="color:var(--ink)"':''}>${A[k]}</span><button class="p" data-d="${k}+1" ${A[k]>=mx?'disabled':''} aria-label="more">+</button></div></div>`;
- A.players=Math.min(A.players,L.mp);A.waiting=Math.min(A.waiting,L.mw);
- return `<div class="screen"><div style="display:flex;align-items:center;gap:6px"><button data-go="home" aria-label="Back" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer">←</button><b class="sg" style="font-size:18px">Check in</b></div>
- <h1 style="font-size:28px;margin:0;line-height:1.1">What's it like at the courts?</h1><div class="muted">Rough numbers are fine. It takes five seconds.</div>
- <div class="card row" style="justify-content:space-between;align-items:center"><div><div class="muted">Reporting for</div><b class="sg">${esc(pk[0])}</b><div class="muted">${L.c} ${P.sport} courts · ${pk[2]} mi away</div></div><button class="btn alt" style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">Change park</button></div>
- ${sportSeg()}
- ${st('players',L.mp,'Playing right now',`All courts combined · max ${L.mp} (${L.c} courts × 4)`)}
- ${st('waiting',L.mw,'Waiting for a court',`People in line · max ${L.mw} at this park`)}
- <button class="btn" id="share" style="margin-top:auto">Share update</button></div>`;
-}
-function park(){const p=DATA[P.sport][A.park]||DATA[P.sport][0];
- return `<div class="screen"><div style="display:flex;align-items:center;gap:6px"><button data-go="home" aria-label="Back" style="width:44px;height:44px;border:none;background:none;font-size:22px;cursor:pointer">←</button><b class="sg" style="font-size:18px">${esc(p[0])}</b></div>
- <div class="card"><div class="muted">Average of reports from the last 10 minutes</div><div class="row" style="align-items:flex-end;gap:24px"><div><div class="sg" style="font-size:56px;font-weight:700;color:var(--green);line-height:1">${p[1]}</div><div class="muted">playing</div></div><div><div class="sg" style="font-size:40px;font-weight:700;line-height:1">3</div><div class="muted">waiting</div></div></div><div class="muted" style="margin-top:8px">${p[3]} ${P.sport} courts · ${p[2]} mi</div></div>
- <b class="sg">Recent reports</b>${REPORTS.map(r=>`<div class="card row" style="justify-content:space-between"><div><b>${r[0]}</b><div class="muted">${r[1]}</div></div><div class="muted">${r[2]} playing · ${r[3]} waiting</div></div>`).join('')}
- <button class="btn" data-go="checkin" style="margin-top:auto">Check in here</button></div>`;
-}
-function wire(h){
- bindSport(h,()=>{appRender()});
- h.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{A.screen=b.dataset.go;appRender()});
- h.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{A.tab=b.dataset.tab;appRender()});
- h.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{A.view=b.dataset.view;appRender()});
- h.querySelectorAll('[data-park]').forEach(b=>b.onclick=()=>{A.park=+b.dataset.park;A.screen='park';appRender()});
- h.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{P.radius=+b.dataset.r;save();A.sheet=false;appRender()});
- h.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const m=b.dataset.d.match(/(\w+)([+-])1/),L=lim(P.sport),mx=m[1]==='players'?L.mp:L.mw;A[m[1]]=Math.max(0,Math.min(mx,A[m[1]]+(m[2]==='+'?1:-1)));appRender()});
- const on=(id,f)=>{const e=$('#'+id,h);if(e)e.onclick=f};
- on('radius',()=>{A.sheet=true;appRender()});
- on('showpw',e=>{A.pw=!A.pw;appRender()});
- on('submit',()=>{if(A.tab==='create'){A.vstep=true;appRender()}else{A.screen='home';appRender()}});
- on('verify',()=>{A.vstep=false;A.screen='home';appRender()});
- on('chg',()=>{A.vstep=false;appRender()});
- on('share',()=>{A.screen='home';A.toast=true;appRender();const p=$('#pill');setTimeout(()=>{p&&(p.style.opacity=0)},1800);setTimeout(()=>{A.toast=false;p&&p.remove()},2400)});
-}
-
-/* ---------- Web check-in ---------- */
-const W={step:'email',how:'',pl:12,wt:2,toast:false};
-function webRender(){const h=$('#webbox');let s='';
- if(W.step==='email')s=`<div style="display:flex;gap:8px;align-items:center"><img src="icon.png" alt="" width="32" height="32" style="border-radius:8px"><b class="sg" style="font-size:18px">CourtPulse</b></div><h1 style="font-size:28px;margin:0">Sign in to check in</h1><div class="muted">Lakeside Park · scanned from the sign. No app needed.</div>${['Google','Facebook','Apple'].map(n=>`<button class="btn alt" data-soc="${n}">Continue with ${n}</button>`).join('')}<div class="muted" style="text-align:center">or use your email</div><div class="row"><div class="fld"><label>First name</label><input></div><div class="fld"><label>Last name</label><input></div></div><div class="fld"><label>Email</label><input type="email"></div><button class="btn" id="w-email">Continue with email</button><div class="muted">We only collect first name, last name and email.</div>`;
- else if(W.step==='code')s=`<h1 style="font-size:28px;margin:0">Check your email</h1><div class="muted">Enter the 6-digit code we sent. (Prototype: any 6 digits.)</div><input inputmode="numeric" maxlength="6" placeholder="123456"><button class="btn" id="w-code">Verify</button>`;
- else{const L=lim(P.sport);s=`<div class="muted">Signed in with ${W.how||'email'}</div><h1 style="font-size:28px;margin:0">What's it like at the courts?</h1>${sportSeg()}
- ${[['pl',L.mp,'Playing right now'],['wt',L.mw,'Waiting for a court']].map(([k,m,t])=>`<div class="card"><b class="sg">${t}</b><div class="step"><button data-w="${k}-">−</button><span class="n" ${k==='wt'?'style="color:var(--ink)"':''}>${W[k]}</span><button class="p" data-w="${k}+" ${W[k]>=m?'disabled':''}>+</button></div></div>`).join('')}<button class="btn" id="w-share">Share update</button>`;
- W.pl=Math.min(W.pl,L.mp);W.wt=Math.min(W.wt,L.mw)}
- h.innerHTML=s+(W.toast?'<div class="pill" id="wpill">Update shared</div>':'');
- bindSport(h,webRender);
- h.querySelectorAll('[data-soc]').forEach(b=>b.onclick=()=>{W.how=b.dataset.soc;W.step='in';webRender()});
- h.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{const k=b.dataset.w.slice(0,2),L=lim(P.sport),m=k==='pl'?L.mp:L.mw;W[k]=Math.max(0,Math.min(m,W[k]+(b.dataset.w.endsWith('+')?1:-1)));webRender()});
- const on=(id,f)=>{const e=$('#'+id,h);if(e)e.onclick=f};
- on('w-email',()=>{W.how='email';W.step='code';webRender()});
- on('w-code',()=>{W.step='in';webRender()});
- on('w-share',()=>{W.toast=true;webRender();const p=$('#wpill');setTimeout(()=>{p&&(p.style.opacity=0)},1800);setTimeout(()=>{W.toast=false;webRender()},2400)});
-}
-
-/* ---------- Sign ---------- */
-function qr(){let s=7,r=()=>(s=(s*16807)%2147483647)/2147483647,n=29,d='';
- const fin=(x,y)=>x<8&&y<8||x>n-9&&y<8||x<8&&y>n-9;
- for(let y=0;y<n;y++)for(let x=0;x<n;x++){let on;if(fin(x,y)){const a=x<8?x:x-(n-7),b=y<8?y:y-(n-7);on=(a>=0&&a<7&&b>=0&&b<7)&&(a==0||a==6||b==0||b==6||(a>=2&&a<=4&&b>=2&&b<=4))}else on=r()>.5;if(on)d+=`M${x} ${y}h1v1h-1z`}
- return `<svg viewBox="-2 -2 33 33" width="300" height="300" role="img" aria-label="Placeholder QR code"><rect x="-2" y="-2" width="33" height="33" fill="#fff"/><path d="${d}" fill="#15332B"/></svg>`}
-function signRender(){return `<div class="sign"><div style="display:flex;gap:10px;align-items:center"><img src="icon.png" alt="" width="48" height="48" style="border-radius:11px"><b class="sg" style="font-size:24px">CourtPulse</b></div><h2>Scan to check in</h2><div style="font-size:20px;color:var(--muted)">Tell other players how busy the courts are. No app needed.</div>${qr()}<div class="seg" style="width:auto;padding:6px 14px;gap:20px"><span style="display:flex;gap:8px;align-items:center">${PB} Pickleball</span><span style="display:flex;gap:8px;align-items:center">${TN} Tennis</span></div><div class="muted" style="font-size:15px">Sign in with Google, Facebook, Apple or email · [YOUR URL]<br>Placeholder QR: it does not scan.</div></div>`}
-
-/* ---------- Shell ---------- */
-const TABS=[['app','App'],['web','Web check-in (QR)'],['sign','Park sign']];let cur='app';
-function show(t){cur=t;$('#tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${k===t}" data-t="${k}">${l}</button>`).join('');
- $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>show(b.dataset.t));
- const st=$('#stage');
- if(t==='app'){st.innerHTML='<div class="phone" id="phone"></div>';appRender()}
- else if(t==='web'){st.innerHTML='<div class="web" id="webbox"></div>';webRender()}
- else st.innerHTML=signRender();}
-show('app');
+render();load();setInterval(load,30000);
 </script></body></html>
