@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CourtPulse Check In</title>
-<link rel="icon" href="icon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon.png?v=3"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--page:#F6F8EF;--ring:#DCE5D0;--ink:#15332B;--muted:#5E7168;--outline:#B4C4AA;--lime:#D9F24A;--green:#1F6B3F;--err:#B3261E}
@@ -24,7 +24,7 @@ label{font-size:12px;color:var(--muted);display:block;margin:0 0 4px}.row{displa
 .step button{width:56px;height:56px;border-radius:50%;border:1px solid var(--outline);background:#fff;font:28px 'Space Grotesk';cursor:pointer;color:var(--ink)}
 .step button.p{background:var(--lime);border:none;font-weight:700}.step button:disabled{opacity:.35}
 .pill{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 20px;border-radius:24px;font:600 14px Inter;transition:opacity .5s}
-.head{display:flex;align-items:center;gap:10px}.head img{border-radius:9px}
+.head{display:flex;align-items:center;gap:10px}.head img{display:block}
 a.lnk,button.lnk{background:none;border:none;color:var(--green);font:600 13px Inter;cursor:pointer;padding:0;text-decoration:underline}
 [hidden]{display:none!important}
 </style></head><body><main id="app"></main>
@@ -44,7 +44,7 @@ let prefs={sport:'pickleball'};try{Object.assign(prefs,JSON.parse(localStorage.g
 const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,sport:prefs.sport}))}catch(e){}};
 const S={live:null,step:'loading',park:null,parks:[],picking:false,user:null,email:'',first:'',last:'',err:'',busy:false,pl:12,wt:2,toast:false,recent:[]};
 let sb=null;
-const head=()=>`<a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png" alt="" width="36" height="36"><b class="sg" style="font-size:20px">CourtPulse</b></a>`;
+const head=()=>`<a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=3" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></a>`;
 const courts=()=>S.park?(prefs.sport==='tennis'?S.park.tennis_courts:S.park.pickleball_courts):0;
 const mp=()=>courts()*4,mw=()=>courts()*2;
 const fullName=u=>{const m=u?.user_metadata||{};return [m.first_name,m.last_name].filter(Boolean).join(' ')||(u?.email||'').split('@')[0]};
