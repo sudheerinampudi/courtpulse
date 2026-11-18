@@ -2,6 +2,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CourtPulse: who's playing near you</title>
 <link rel="icon" href="icon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--page:#F6F8EF;--ring:#DCE5D0;--ink:#15332B;--muted:#5E7168;--outline:#B4C4AA;--lime:#D9F24A;--green:#1F6B3F;--empty:#D3DCC8;--live:#1F9D55}
@@ -22,8 +23,10 @@ main{max-width:440px;margin:0 auto;padding:20px 20px 40px;display:flex;flex-dire
 a.lnk,button.lnk{color:var(--green);font:600 13px Inter;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline}
 .zip{display:flex;gap:8px}.zip input{flex:1;min-height:48px;border:1px solid var(--outline);border-radius:12px;padding:0 14px;font:400 16px Inter;background:#fff;color:var(--ink)}.zip .go{min-height:48px;padding:0 16px;border:none;border-radius:12px;background:var(--lime);color:#0F2A24;font:700 15px 'Space Grotesk';cursor:pointer}
 .feat{gap:10px;padding:18px}.row2{display:flex;gap:36px;align-items:flex-end}
+.mapbox{height:380px;border-radius:18px;box-shadow:0 0 0 1px var(--ring);overflow:hidden}.mpin{background:var(--lime);color:#0F2A24;font:700 15px 'Space Grotesk';border-radius:16px;min-width:44px;height:32px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .chips{display:flex;gap:6px}.chips button{flex:1;min-height:40px;border:1px solid var(--outline);background:#fff;border-radius:20px;font:600 13px Inter;color:var(--ink);cursor:pointer}.chips button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
 </style></head><body><main id="app"></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 const SUPABASE_URL = 'https://wjedvyqtqgvclxxsxyox.supabase.co';
@@ -32,8 +35,8 @@ const PB='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><ci
 const TN='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#D5E83A" stroke="#15332B" stroke-width="1.5"/><path d="M4.4 6.6c4.4 3.2 4.4 7.6 0 10.8M19.6 6.6c-4.4 3.2-4.4 7.6 0 10.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app=document.getElementById('app');
-let prefs={sport:'pickleball',zip:'',radius:5,lat:null,lng:null};try{Object.assign(prefs,JSON.parse(localStorage.getItem('cn-prefs')||'{}'))}catch(e){}
-if(prefs.sport!=='tennis')prefs.sport='pickleball';if(![1,2,5,10].includes(prefs.radius))prefs.radius=5;
+let prefs={sport:'pickleball',zip:'',radius:5,lat:null,lng:null,view:'list'};try{Object.assign(prefs,JSON.parse(localStorage.getItem('cn-prefs')||'{}'))}catch(e){}
+if(prefs.sport!=='tennis')prefs.sport='pickleball';if(![1,2,5,10].includes(prefs.radius))prefs.radius=5;if(prefs.view!=='map')prefs.view='list';
 const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,...prefs}))}catch(e){}};
 const miles=(a,b,c,d)=>{const R=3958.8,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
 let msg='';
@@ -80,18 +83,31 @@ function render(){
   let h=`<div class="head"><img src="icon.png" alt="" width="36" height="36"><b class="sg" style="font-size:20px">CourtPulse</b></div>
   <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>
   ${feat?`<div class="card feat"><div class="muted"><span class="live">Live</span> · ${prefs.sport==='tennis'?'Tennis':'Pickleball'} · ${feat.courts} courts</div><b class="sg" style="font-size:22px">${esc(feat.name)}</b><div class="row2"><div><div class="big">${Number(feat.avg_playing)}</div><div class="muted">playing now</div></div><div><div class="big" style="color:var(--ink)">${Number(feat.avg_waiting)}</div><div class="muted">waiting</div></div></div><div class="muted">${Number(feat.report_count)?'Average of '+Number(feat.report_count)+' report'+(feat.report_count==1?'':'s')+' in the last 10 minutes':'No reports in the last 10 minutes. Be the first!'}</div><a class="btn" href="checkin.html?park=${encodeURIComponent(feat.slug)}">Share update</a></div>`:''}
-  <form id="zipf" class="zip"><input id="zip" inputmode="numeric" maxlength="5" placeholder="ZIP code" aria-label="ZIP code" value="${esc(prefs.zip||'')}"><button class="go" type="submit">Find parks</button></form>
+  <form id="zipf" class="zip"><input id="zip" inputmode="numeric" maxlength="5" placeholder="Enter ZIP code" aria-label="ZIP code" value="${esc(prefs.zip||'')}"><button class="go" type="submit">${located?'Change ZIP':'Find parks'}</button></form>
   <div class="muted"><button class="lnk" id="loc" type="button">Use my location</button>${located?' · <button class="lnk" id="clr" type="button">Show all parks</button>':''}</div>
   ${located?`<div class="chips" role="group" aria-label="Distance">${[1,2,5,10].map(r=>`<button type="button" aria-pressed="${prefs.radius===r}" data-r="${r}">${r} mi</button>`).join('')}</div>`:''}
+  <div class="seg" role="group" aria-label="View"><button type="button" aria-pressed="${prefs.view==='list'}" data-view="list">List</button><button type="button" aria-pressed="${prefs.view==='map'}" data-view="map">Map</button></div>
   ${msg?`<div class="muted" role="alert" style="color:#B3261E">${esc(msg)}</div>`:''}
   ${feat&&list.length?'<b class="sg">More parks</b>':''}<div><div class="muted"><span class="live">Live</span> · playing now${located?' within '+prefs.radius+' mi':' at all parks'}</div><div class="big">${rows?tot:'…'}</div></div>`;
   if(err)h+=`<div class="card" role="alert"><b>Couldn't load counts</b><div class="muted">${esc(err)}</div></div>`;
   else if(rows&&!list.length&&!(feat&&!located))h+=`<div class="card"><b>No ${prefs.sport} parks within ${prefs.radius} mi</b><div class="muted">${all?'Try a larger distance, or show all parks.':'No parks for this sport yet.'}</div></div>`;
-  list.forEach(r=>{const mx=r.courts*4,n=Number(r.avg_playing);
-    h+=`<a class="card" href="checkin.html?park=${encodeURIComponent(r.slug)}"><div class="row"><b class="sg" style="font-size:16px">${esc(r.name)}</b><span class="num">${n}</span></div><div class="muted">${r.d!=null?r.d.toFixed(1)+' mi · ':''}${r.courts} courts · ${Number(r.avg_waiting)} waiting · ${Number(r.report_count)?Number(r.report_count)+' report'+(r.report_count==1?'':'s')+' in last 10 min':'no recent reports'}</div><div class="bar"><i style="width:${Math.min(100,n/mx*100)}%"></i></div></a>`});
+  if(prefs.view==='map'){if(rows&&list.length)h+='<div id="map" class="mapbox" role="region" aria-label="Map of parks"></div>'}
+  else list.forEach(r=>{const mx=r.courts*4,n=Number(r.avg_playing);
+    h+=`<a class="card" href="?park=${encodeURIComponent(r.slug)}"><div class="row"><b class="sg" style="font-size:16px">${esc(r.name)}</b><span class="num">${n}</span></div><div class="muted">${r.d!=null?r.d.toFixed(1)+' mi · ':''}${r.courts} courts · ${Number(r.avg_waiting)} waiting · ${Number(r.report_count)?Number(r.report_count)+' report'+(r.report_count==1?'':'s')+' in last 10 min':'no recent reports'}</div><div class="bar"><i style="width:${Math.min(100,n/mx*100)}%"></i></div></a>`});
   const first=list[0]?list[0].slug:'border-park';
   h+=`<a class="btn" href="checkin.html?park=${encodeURIComponent(first)}">Check in</a><div class="muted" style="text-align:center">Averages of player reports from the last 10 minutes. Refreshes every 30 seconds.</div><div class="muted" style="text-align:center"><a class="lnk" href="prototype.html">Design prototype</a></div>`;
   app.innerHTML=h;
+  app.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{prefs.view=b.dataset.view;savePrefs();render()});
+  if(prefs.view==='map'&&document.getElementById('map')&&window.L){try{
+    if(window._map){window._map.remove();window._map=null}
+    const m=L.map('map',{scrollWheelZoom:false});window._map=m;
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(m);
+    const pts=[];
+    list.filter(r=>r.lat!=null).forEach(r=>{pts.push([r.lat,r.lng]);
+      L.marker([r.lat,r.lng],{icon:L.divIcon({className:'',html:`<div class="mpin">${Number(r.avg_playing)}</div>`,iconSize:[44,32],iconAnchor:[22,16]})}).addTo(m)
+       .bindPopup(`<b>${esc(r.name)}</b><br>${Number(r.avg_playing)} playing · ${Number(r.avg_waiting)} waiting${r.d!=null?'<br>'+r.d.toFixed(1)+' mi':''}<br><a href="?park=${encodeURIComponent(r.slug)}">View park</a>`)});
+    if(located){L.circleMarker([prefs.lat,prefs.lng],{radius:8,color:'#fff',weight:3,fillColor:'#5CA8FF',fillOpacity:1}).addTo(m).bindPopup('You are here');pts.push([prefs.lat,prefs.lng])}
+    if(pts.length)m.fitBounds(pts,{padding:[30,30],maxZoom:14});else m.setView([33.95,-117.6],11)}catch(e){}}
   app.querySelectorAll('[data-sport]').forEach(b=>b.onclick=()=>{prefs.sport=b.dataset.sport;savePrefs();rows=null;render();load()});
   app.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{prefs.radius=+b.dataset.r;savePrefs();render()});
   document.getElementById('zipf').onsubmit=async e=>{e.preventDefault();const z=document.getElementById('zip').value.trim();
