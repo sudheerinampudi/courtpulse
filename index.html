@@ -54,7 +54,7 @@ function view(){
   return {list,all,located};
 }
 function render(){
-  const {list,all,located}=view();
+  let {list,all,located}=view();
   const feat=slug?(rows||[]).find(r=>r.slug===slug):null;
   if(feat)list=list.filter(r=>r.slug!==slug);
   const tot=list.reduce((a,r)=>a+Number(r.avg_playing),0);
@@ -65,9 +65,9 @@ function render(){
   <div class="muted"><button class="lnk" id="loc" type="button">Use my location</button>${located?' · <button class="lnk" id="clr" type="button">Show all parks</button>':''}</div>
   ${located?`<div class="chips" role="group" aria-label="Distance">${[1,2,5,10].map(r=>`<button type="button" aria-pressed="${prefs.radius===r}" data-r="${r}">${r} mi</button>`).join('')}</div>`:''}
   ${msg?`<div class="muted" role="alert" style="color:#B3261E">${esc(msg)}</div>`:''}
-  ${feat?'<b class="sg">More parks</b>':''}<div><div class="muted"><span class="live">Live</span> · playing now${located?' within '+prefs.radius+' mi':' at all parks'}</div><div class="big">${rows?tot:'…'}</div></div>`;
+  ${feat&&list.length?'<b class="sg">More parks</b>':''}<div><div class="muted"><span class="live">Live</span> · playing now${located?' within '+prefs.radius+' mi':' at all parks'}</div><div class="big">${rows?tot:'…'}</div></div>`;
   if(err)h+=`<div class="card" role="alert"><b>Couldn't load counts</b><div class="muted">${esc(err)}</div></div>`;
-  else if(rows&&!list.length)h+=`<div class="card"><b>No ${prefs.sport} parks within ${prefs.radius} mi</b><div class="muted">${all?'Try a larger distance, or show all parks.':'No parks for this sport yet.'}</div></div>`;
+  else if(rows&&!list.length&&!(feat&&!located))h+=`<div class="card"><b>No ${prefs.sport} parks within ${prefs.radius} mi</b><div class="muted">${all?'Try a larger distance, or show all parks.':'No parks for this sport yet.'}</div></div>`;
   list.forEach(r=>{const mx=r.courts*4,n=Number(r.avg_playing);
     h+=`<a class="card" href="checkin.html?park=${encodeURIComponent(r.slug)}"><div class="row"><b class="sg" style="font-size:16px">${esc(r.name)}</b><span class="num">${n}</span></div><div class="muted">${r.d!=null?r.d.toFixed(1)+' mi · ':''}${r.courts} courts · ${Number(r.avg_waiting)} waiting · ${Number(r.report_count)?Number(r.report_count)+' report'+(r.report_count==1?'':'s')+' in last 10 min':'no recent reports'}</div><div class="bar"><i style="width:${Math.min(100,n/mx*100)}%"></i></div></a>`});
   const first=list[0]?list[0].slug:'border-park';
