@@ -1,4 +1,4 @@
--- CourtPulse: public "who updated" list for a park (last 10 minutes).
+-- CourtPulse: public "who updated" list for a park (last hour).
 -- Shows first name + last initial only (e.g. "Maria S."), never email. Run once in Supabase → SQL Editor.
 create or replace function park_reports(p_slug text, p_sport text)
 returns table (who text, playing int, waiting int, created_at timestamptz)
@@ -8,7 +8,7 @@ language sql security definer set search_path = public as $$
                  then ' ' || upper(left(regexp_replace(btrim(r.reporter_name), '^.*\s', ''), 1)) || '.' else '' end,
          r.playing, r.waiting, r.created_at
   from reports r
-  where r.park_slug = p_slug and r.sport = p_sport and r.created_at > now() - interval '10 minutes'
+  where r.park_slug = p_slug and r.sport = p_sport and r.created_at > now() - interval '1 hour'
   order by r.created_at desc
   limit 20;
 $$;

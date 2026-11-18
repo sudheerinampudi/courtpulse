@@ -35,7 +35,7 @@ alter table reports enable row level security;
 drop policy if exists "parks readable" on parks;
 create policy "parks readable" on parks for select using (true);
 drop policy if exists "signed-in read reports" on reports;
-create policy "signed-in read reports" on reports for select to authenticated using (created_at > now() - interval '10 minutes');
+create policy "signed-in read reports" on reports for select to authenticated using (created_at > now() - interval '1 hour');
 drop policy if exists "signed-in insert own report" on reports;
 create policy "signed-in insert own report" on reports for insert to authenticated with check (user_id = auth.uid());
 
