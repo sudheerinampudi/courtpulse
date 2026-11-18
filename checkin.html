@@ -21,6 +21,8 @@ label{font-size:12px;color:var(--muted);display:block;margin:0 0 4px}.row{displa
 .seg button{flex:1;min-height:44px;border:none;border-radius:20px;background:transparent;color:var(--ink);font:600 14px Inter;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
 .seg button[aria-pressed=true]{background:var(--ink);color:#fff}
 .step{display:flex;align-items:center;justify-content:space-between}
+.stick{position:sticky;bottom:0;z-index:4;background:linear-gradient(rgba(246,248,239,0),var(--page) 28%);padding:14px 0 8px}
+.cnt{padding:10px 14px;gap:2px}.cnt .step button{width:44px;height:44px;font-size:24px}.cnt .step .n{font-size:40px}
 .step .n{font:700 60px 'Space Grotesk';color:var(--green);letter-spacing:-.03em}
 .step button{width:56px;height:56px;border-radius:50%;border:1px solid var(--outline);background:#fff;font:28px 'Space Grotesk';cursor:pointer;color:var(--ink)}
 .step button.p{background:var(--lime);border:none;font-weight:700}.step button:disabled{opacity:.35}
@@ -78,8 +80,8 @@ function render(){
  else if(S.step==='checkin'){const n=Math.min(S.pl,mp()),w=Math.min(S.wt,mw());S.pl=n;S.wt=w;
   h+=`${liveCard()}<div class="muted">Signed in as ${esc(fullName(S.user))} · <button class="lnk" id="out">Sign out</button></div>
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="muted">Reporting for</div><b class="sg" style="font-size:17px">${esc(S.park.name)}</b><div class="muted">${courts()} ${prefs.sport} courts</div></div><button class="btn alt" id="chg" style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">${S.picking?'Close':'Change park'}</button></div>${S.picking?`<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${S.parks.map(p=>`<button class="btn alt" data-park="${esc(p.slug)}" style="text-align:left;padding:0 14px;${p.slug===S.park.slug?'border-color:var(--green);font-weight:700':''}">${esc(p.name)}</button>`).join('')}</div>`:''}</div>${sportSeg()}
-  ${[['pl',mp(),'Playing right now','All courts combined · max '+mp()],['wt',mw(),'Waiting for a court','People in line · max '+mw()]].map(([k,m,t,s])=>`<div class="card"><b class="sg" style="font-size:18px">${t}</b><div class="muted">${s}</div><div class="step"><button data-w="${k}-" aria-label="fewer">−</button><span class="n" ${k==='wt'?'style="color:var(--ink)"':''}>${S[k]}</span><button class="p" data-w="${k}+" aria-label="more" ${S[k]>=m?'disabled':''}>+</button></div></div>`).join('')}
-  <div class="err" role="alert">${esc(S.err)}</div><button class="btn" id="share" ${S.busy?'disabled':''}>Share update</button><div class="muted" style="text-align:center">Other players see the average of recent updates.</div>
+  ${[['pl',mp(),'Playing right now','All courts combined · max '+mp()],['wt',mw(),'Waiting for a court','People in line · max '+mw()]].map(([k,m,t,s])=>`<div class="card cnt"><b class="sg" style="font-size:16px">${t}</b><div class="muted" style="font-size:12px">${s}</div><div class="step"><button data-w="${k}-" aria-label="fewer">−</button><span class="n" ${k==='wt'?'style="color:var(--ink)"':''}>${S[k]}</span><button class="p" data-w="${k}+" aria-label="more" ${S[k]>=m?'disabled':''}>+</button></div></div>`).join('')}
+  <div class="err" role="alert">${esc(S.err)}</div><div class="stick"><button class="btn" id="share" ${S.busy?'disabled':''}>Share update</button></div><div class="muted" style="text-align:center">Other players see the average of recent updates.</div>
   ${S.recent.length?`<b class="sg">Today's updates</b>${S.recent.map(r=>`<div class="card" style="flex-direction:row;justify-content:space-between"><b>${esc(r.reporter_name)}</b><span class="muted">${r.playing} playing · ${r.waiting} waiting</span></div>`).join('')}`:''}`}
  if(S.toast)h+='<div class="pill" id="pill">Update shared</div>';
  app.innerHTML=h;wire();
