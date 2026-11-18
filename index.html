@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>CourtPulse: who's playing near you</title>
-<link rel="icon" href="icon.png?v=3"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
+<link rel="icon" href="favicon.png?v=4"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -60,7 +60,7 @@ function view(){
 const ago=t=>{const m=Math.max(0,Math.round((Date.now()-new Date(t))/60000));return m<1?'just now':m<60?m+' min ago':Math.floor(m/60)+' hr ago'};
 function renderPark(){
   const feat=(rows||[]).find(r=>r.slug===slug);
-  let h=`<a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=3" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></a>
+  let h=`<a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></a>
   <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>`;
   if(err)h+=`<div class="card" role="alert"><b>Couldn't load counts</b><div class="muted">${esc(err)}</div></div>`;
   else if(!rows)h+='<div class="muted">Loading…</div>';
@@ -80,7 +80,7 @@ function render(){
   const feat=slug?(rows||[]).find(r=>r.slug===slug):null;
   if(feat)list=list.filter(r=>r.slug!==slug);
   const tot=list.reduce((a,r)=>a+Number(r.avg_playing),0);
-  let h=`<div class="head"><img src="icon.png?v=3" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></div>
+  let h=`<div class="head"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></div>
   <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>
   <a class="btn" href="checkin.html?park=${encodeURIComponent(first)}">Check in</a>
   ${feat?`<div class="card feat"><div class="muted"><span class="live">Live</span> · ${prefs.sport==='tennis'?'Tennis':'Pickleball'} · ${feat.courts} courts</div><b class="sg" style="font-size:22px">${esc(feat.name)}</b><div class="row2"><div><div class="big">${Number(feat.avg_playing)}</div><div class="muted">playing now</div></div><div><div class="big" style="color:var(--ink)">${Number(feat.avg_waiting)}</div><div class="muted">waiting</div></div></div><div class="muted">${Number(feat.report_count)?'Average of '+Number(feat.report_count)+' report'+(feat.report_count==1?'':'s')+' in the last 2 hours':'No reports in the last 2 hours. Be the first!'}</div><a class="btn" href="checkin.html?park=${encodeURIComponent(feat.slug)}">Share update</a></div>`:''}
