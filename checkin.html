@@ -42,7 +42,7 @@ const app=$('#app');
 const slug=new URLSearchParams(location.search).get('park')||'lakeside';
 let prefs={sport:'pickleball'};try{Object.assign(prefs,JSON.parse(localStorage.getItem('cn-prefs')||'{}'))}catch(e){}
 const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,sport:prefs.sport}))}catch(e){}};
-const S={step:'loading',park:null,user:null,email:'',first:'',last:'',err:'',busy:false,pl:12,wt:2,toast:false,recent:[]};
+const S={step:'loading',park:null,parks:[],picking:false,user:null,email:'',first:'',last:'',err:'',busy:false,pl:12,wt:2,toast:false,recent:[]};
 let sb=null;
 const head=()=>`<div class="head"><img src="icon.png" alt="" width="36" height="36"><b class="sg" style="font-size:20px">CourtPulse</b></div>`;
 const courts=()=>S.park?(prefs.sport==='tennis'?S.park.tennis_courts:S.park.pickleball_courts):0;
@@ -54,12 +54,13 @@ async function init(){
   sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,detectSessionInUrl:true}});
   const {data:pk,error}=await sb.from('parks').select('*').eq('slug',slug).maybeSingle();
   if(error||!pk){S.step='nopark';return render()}
-  S.park=pk;if(!(pk.tennis_courts>0)&&prefs.sport==='tennis')prefs.sport='pickleball';
-  if(!(pk.pickleball_courts>0)&&prefs.sport==='pickleball')prefs.sport='tennis';
+  S.park=pk;fixSport();
+  const {data:all}=await sb.from('parks').select('*').order('name');S.parks=all||[pk];
   const {data:{session}}=await sb.auth.getSession();S.user=session?.user||null;
   sb.auth.onAuthStateChange((_e,s)=>{const had=!!S.user;S.user=s?.user||null;if(S.user&&!had){S.step='checkin';render()}});
   S.step=S.user?'checkin':'signin';render();
 }
+function fixSport(){const p=S.park;if(!(p.tennis_courts>0)&&prefs.sport==='tennis')prefs.sport='pickleball';if(!(p.pickleball_courts>0)&&prefs.sport==='pickleball')prefs.sport='tennis'}
 function sportSeg(){const p=S.park;return `<div class="seg" role="group" aria-label="Sport">${p.pickleball_courts>0?`<button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button>`:''}${p.tennis_courts>0?`<button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button>`:''}</div>`}
 function render(){
  let h=head();
@@ -75,7 +76,7 @@ function render(){
  else if(S.step==='code')h+=`<h1>Check your email</h1><div class="muted">We sent a code to ${esc(S.email)}. Enter it to confirm the address is yours.</div><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Code" aria-label="Verification code"><div class="err" role="alert">${esc(S.err)}</div><button class="btn" id="verify" ${S.busy?'disabled':''}>Verify</button><button class="lnk" id="back">Change email</button>`;
  else if(S.step==='checkin'){const n=Math.min(S.pl,mp()),w=Math.min(S.wt,mw());S.pl=n;S.wt=w;
   h+=`<div class="muted">Signed in as ${esc(fullName(S.user))} · <button class="lnk" id="out">Sign out</button></div><h1>What's it like at the courts?</h1>
-  <div class="card"><div class="muted">Reporting for</div><b class="sg" style="font-size:17px">${esc(S.park.name)}</b><div class="muted">${courts()} ${prefs.sport} courts</div></div>${sportSeg()}
+  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="muted">Reporting for</div><b class="sg" style="font-size:17px">${esc(S.park.name)}</b><div class="muted">${courts()} ${prefs.sport} courts</div></div><button class="btn alt" id="chg" style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">${S.picking?'Close':'Change park'}</button></div>${S.picking?`<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${S.parks.map(p=>`<button class="btn alt" data-park="${esc(p.slug)}" style="text-align:left;padding:0 14px;${p.slug===S.park.slug?'border-color:var(--green);font-weight:700':''}">${esc(p.name)}</button>`).join('')}</div>`:''}</div>${sportSeg()}
   ${[['pl',mp(),'Playing right now','All courts combined · max '+mp()],['wt',mw(),'Waiting for a court','People in line · max '+mw()]].map(([k,m,t,s])=>`<div class="card"><b class="sg" style="font-size:18px">${t}</b><div class="muted">${s}</div><div class="step"><button data-w="${k}-" aria-label="fewer">−</button><span class="n" ${k==='wt'?'style="color:var(--ink)"':''}>${S[k]}</span><button class="p" data-w="${k}+" aria-label="more" ${S[k]>=m?'disabled':''}>+</button></div></div>`).join('')}
   <div class="err" role="alert">${esc(S.err)}</div><button class="btn" id="share" ${S.busy?'disabled':''}>Share update</button><div class="muted" style="text-align:center">Other players see the average of recent updates.</div>
   ${S.recent.length?`<b class="sg">Reports in the last 10 minutes</b>${S.recent.map(r=>`<div class="card" style="flex-direction:row;justify-content:space-between"><b>${esc(r.reporter_name)}</b><span class="muted">${r.playing} playing · ${r.waiting} waiting</span></div>`).join('')}`:''}`}
@@ -96,6 +97,8 @@ function wire(){
   S.busy=true;S.err='';render();
   const {data,error}=await sb.auth.verifyOtp({email:S.email,token:t,type:'email'});
   S.busy=false;if(error){S.err='That code did not work. Check it and try again.';render()}else{S.user=data.user;S.step='checkin';render();loadRecent()}});
+ on('chg',()=>{S.picking=!S.picking;render()});
+ app.querySelectorAll('[data-park]').forEach(b=>b.onclick=()=>{const p=S.parks.find(x=>x.slug===b.dataset.park);if(!p)return;S.park=p;S.picking=false;fixSport();S.recent=[];S.pl=Math.min(S.pl,mp());S.wt=Math.min(S.wt,mw());try{history.replaceState(null,'','?park='+encodeURIComponent(p.slug))}catch(e){}render();loadRecent()});
  on('back',()=>{S.step='signin';S.err='';render()});
  on('out',async()=>{await sb.auth.signOut();S.user=null;S.step='signin';render()});
  on('share',async()=>{S.busy=true;S.err='';render();
