@@ -5,6 +5,13 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+.prof{width:44px;height:44px;border-radius:50%;border:1px solid var(--outline);background:#fff;padding:0;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;font:700 15px 'Space Grotesk';color:var(--green)}.prof img{width:100%;height:100%;object-fit:cover;display:block}
+.signin-pill{min-height:40px;padding:0 14px;border:1px solid var(--outline);border-radius:20px;background:#fff;color:var(--ink);font:600 13px Inter;text-decoration:none;display:flex;align-items:center}
+.ov{position:fixed;inset:0;background:rgba(21,51,43,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:var(--page);width:100%;max-width:440px;border-radius:24px 24px 0 0;padding:20px 20px 28px;display:flex;flex-direction:column;gap:12px;max-height:90vh;overflow:auto}
+.sheet input[type=text]{width:100%;min-height:48px;border:1px solid var(--outline);border-radius:12px;padding:0 14px;font:400 16px Inter;background:#fff;color:var(--ink)}
+.sheet label{font-size:12px;color:var(--muted);display:block;margin:0 0 4px}
+.avbig{width:88px;height:88px;border-radius:50%;background:#fff;border:1px solid var(--outline);overflow:hidden;display:flex;align-items:center;justify-content:center;font:700 30px 'Space Grotesk';color:var(--green);margin:0 auto}.avbig img{width:100%;height:100%;object-fit:cover}
 .topbar{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;background:var(--page);padding:8px 0}.homebtn{min-height:40px;padding:0 14px;border:1px solid var(--outline);border-radius:20px;background:#fff;color:var(--ink);font:600 13px Inter;text-decoration:none;display:flex;align-items:center;gap:6px}
 :root{--page:#F6F8EF;--ring:#DCE5D0;--ink:#15332B;--muted:#5E7168;--outline:#B4C4AA;--lime:#D9F24A;--green:#1F6B3F;--empty:#D3DCC8;--live:#1F9D55}
 *{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font-family:Inter,system-ui,sans-serif}
@@ -42,6 +49,59 @@ const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{
 const miles=(a,b,c,d)=>{const R=3958.8,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
 let msg='';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let user=null,profOpen=false,pMsg='',pBusy=false;
+const nm=u=>{const m=(u&&u.user_metadata)||{};return {f:m.first_name||'',l:m.last_name||'',av:m.avatar_url||''}};
+const initials=u=>{const n=nm(u);const t=((n.f[0]||'')+(n.l[0]||'')).toUpperCase();return t||((u&&u.email||'?')[0]||'?').toUpperCase()};
+sb.auth.getSession().then(({data})=>{user=data&&data.session?data.session.user:null;render()}).catch(()=>{});
+sb.auth.onAuthStateChange((_e,s)=>{user=s?s.user:null;if(!pBusy)render()});
+function profBtn(first){
+  if(!user)return `<a class="signin-pill" href="checkin.html?park=${encodeURIComponent(first)}">Sign in</a>`;
+  const n=nm(user);
+  return `<button class="prof" id="prof" aria-label="Your profile" type="button">${n.av?`<img src="${esc(n.av)}" alt="">`:esc(initials(user))}</button>`;
+}
+function profSheet(){
+  if(!profOpen||!user)return '';
+  const n=nm(user);
+  return `<div class="ov" id="ov"><div class="sheet" role="dialog" aria-label="Your profile">
+  <div class="row" style="justify-content:space-between;align-items:center"><b class="sg" style="font-size:20px">Your profile</b><button class="lnk" id="pclose" type="button">Close</button></div>
+  <div class="avbig">${n.av?`<img src="${esc(n.av)}" alt="Your photo">`:esc(initials(user))}</div>
+  <label class="btn" style="min-height:44px;background:#fff;border:1px solid var(--outline);font:600 14px Inter;cursor:pointer">Change photo<input id="pfile" type="file" accept="image/*" hidden></label>
+  <div><label for="pf">First name</label><input type="text" id="pf" autocomplete="given-name" value="${esc(n.f)}"></div>
+  <div><label for="pl">Last name</label><input type="text" id="pl" autocomplete="family-name" value="${esc(n.l)}"></div>
+  <div class="muted">${esc(user.email||'')}</div>
+  ${pMsg?`<div class="muted" role="status" style="color:${pMsg.startsWith('Saved')||pMsg.startsWith('Photo')?'#1F6B3F':'#B3261E'}">${esc(pMsg)}</div>`:''}
+  <button class="btn" id="psave" type="button" ${pBusy?'disabled':''}>Save name</button>
+  <button class="btn" id="pout" type="button" style="background:#fff;border:1px solid var(--outline);font:600 14px Inter">Sign out</button>
+  </div></div>`;
+}
+function wireProfile(){
+  const g=id=>document.getElementById(id);
+  if(g('prof'))g('prof').onclick=()=>{profOpen=true;pMsg='';render()};
+  if(!profOpen)return;
+  g('pclose').onclick=()=>{profOpen=false;render()};
+  g('ov').onclick=e=>{if(e.target.id==='ov'){profOpen=false;render()}};
+  g('pout').onclick=async()=>{await sb.auth.signOut();user=null;profOpen=false;render()};
+  g('psave').onclick=async()=>{const f=g('pf').value.trim(),l=g('pl').value.trim();
+    if(!f||!l){pMsg='Enter your first and last name.';return render()}
+    pBusy=true;pMsg='';render();
+    const {data,error}=await sb.auth.updateUser({data:{first_name:f,last_name:l}});
+    pBusy=false;if(error)pMsg=error.message;else{user=data.user;pMsg='Saved.'}render()};
+  g('pfile').onchange=async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;
+    pBusy=true;pMsg='Uploading…';render();
+    try{
+      const bmp=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=URL.createObjectURL(file)});
+      const sz=256,cv=document.createElement('canvas');cv.width=cv.height=sz;const k=Math.min(bmp.width,bmp.height);
+      cv.getContext('2d').drawImage(bmp,(bmp.width-k)/2,(bmp.height-k)/2,k,k,0,0,sz,sz);
+      const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',0.85));
+      const path=user.id+'/avatar.jpg';
+      const up=await sb.storage.from('avatars').upload(path,blob,{upsert:true,contentType:'image/jpeg'});
+      if(up.error)throw up.error;
+      const url=sb.storage.from('avatars').getPublicUrl(path).data.publicUrl+'?v='+Date.now();
+      const {data,error}=await sb.auth.updateUser({data:{avatar_url:url}});
+      if(error)throw error;user=data.user;pMsg='Photo updated.';
+    }catch(err){pMsg='Could not upload the photo. '+(err&&err.message?err.message:'')}
+    pBusy=false;render()};
+}
 let rows=null,err='',updated=null,tried=false,reps=[];
 const slug=new URLSearchParams(location.search).get('park');
 async function load(){
@@ -81,7 +141,7 @@ function render(){
   const feat=slug?(rows||[]).find(r=>r.slug===slug):null;
   if(feat)list=list.filter(r=>r.slug!==slug);
   const tot=list.reduce((a,r)=>a+Number(r.avg_playing),0);
-  let h=`<div class="head"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></div>
+  let h=`<div class="topbar"><div class="head"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></div>${profBtn(first)}</div>
   <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>
   <a class="btn" href="checkin.html?park=${encodeURIComponent(first)}">Check in</a>
   ${feat?`<div class="card feat"><div class="muted"><span class="live">Live</span> · ${prefs.sport==='tennis'?'Tennis':'Pickleball'} · ${feat.courts} courts</div><b class="sg" style="font-size:22px">${esc(feat.name)}</b><div class="row2"><div><div class="big">${Number(feat.avg_playing)}</div><div class="muted">playing now</div></div><div><div class="big" style="color:var(--ink)">${Number(feat.avg_waiting)}</div><div class="muted">waiting</div></div></div><div class="muted">${Number(feat.report_count)?'Average of '+Number(feat.report_count)+' report'+(feat.report_count==1?'':'s')+' in the last 2 hours':'No reports in the last 2 hours. Be the first!'}</div><a class="btn" href="checkin.html?park=${encodeURIComponent(feat.slug)}">Share update</a></div>`:''}
@@ -97,7 +157,7 @@ function render(){
   else list.forEach(r=>{const mx=r.courts*4,n=Number(r.avg_playing);
     h+=`<a class="card" href="?park=${encodeURIComponent(r.slug)}"><div class="row"><b class="sg" style="font-size:16px">${esc(r.name)}</b><span class="num">${n}</span></div><div class="muted">${r.d!=null?r.d.toFixed(1)+' mi · ':''}${r.courts} courts · ${Number(r.avg_waiting)} waiting · ${Number(r.report_count)?Number(r.report_count)+' report'+(r.report_count==1?'':'s')+' in the last 2 hours':'no recent reports'}</div><div class="bar"><i style="width:${Math.min(100,n/mx*100)}%"></i></div></a>`});
   h+=`<div class="muted" style="text-align:center">Averages of player reports from the last 2 hours. Refreshes every 30 seconds.</div>`;
-  app.innerHTML=h;
+  app.innerHTML=h+profSheet();wireProfile();
   app.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{prefs.view=b.dataset.view;savePrefs();render()});
   if(prefs.view==='map'&&document.getElementById('map')&&window.L){try{
     if(window._map){window._map.remove();window._map=null}
