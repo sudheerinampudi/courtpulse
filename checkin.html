@@ -4,6 +4,7 @@
 <link rel="icon" href="favicon.png?v=4"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+.topbar{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;background:var(--page);padding:8px 0}.homebtn{min-height:40px;padding:0 14px;border:1px solid var(--outline);border-radius:20px;background:#fff;color:var(--ink);font:600 13px Inter;text-decoration:none;display:flex;align-items:center;gap:6px}
 :root{--page:#F6F8EF;--ring:#DCE5D0;--ink:#15332B;--muted:#5E7168;--outline:#B4C4AA;--lime:#D9F24A;--green:#1F6B3F;--err:#B3261E}
 *{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font-family:Inter,system-ui,sans-serif}
 .sg,h1,h2{font-family:'Space Grotesk',sans-serif}
@@ -44,7 +45,7 @@ let prefs={sport:'pickleball'};try{Object.assign(prefs,JSON.parse(localStorage.g
 const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,sport:prefs.sport}))}catch(e){}};
 const S={live:null,step:'loading',park:null,parks:[],picking:false,user:null,email:'',first:'',last:'',err:'',busy:false,pl:12,wt:2,toast:false,recent:[]};
 let sb=null;
-const head=()=>`<a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></a>`;
+const head=()=>`<div class="topbar"><a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></a><a class="homebtn" href="./"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</a></div>`;
 const courts=()=>S.park?(prefs.sport==='tennis'?S.park.tennis_courts:S.park.pickleball_courts):0;
 const mp=()=>courts()*4,mw=()=>courts()*2;
 const fullName=u=>{const m=u?.user_metadata||{};return [m.first_name,m.last_name].filter(Boolean).join(' ')||(u?.email||'').split('@')[0]};
