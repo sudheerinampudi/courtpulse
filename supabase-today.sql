@@ -1,7 +1,8 @@
--- CourtPulse: the "who updated" lists cover the last 24 hours (averages stay at the last hour).
+-- CourtPulse: the update lists show TODAY (midnight Pacific time to now). Averages stay at the last hour.
 -- Run once in Supabase → SQL Editor. Safe to re-run.
 drop policy if exists "signed-in read reports" on reports;
-create policy "signed-in read reports" on reports for select to authenticated using (created_at > now() - interval '24 hours');
+create policy "signed-in read reports" on reports for select to authenticated
+  using (created_at >= (date_trunc('day', now() at time zone 'America/Los_Angeles') at time zone 'America/Los_Angeles'));
 
 create or replace function park_reports(p_slug text, p_sport text)
 returns table (who text, playing int, waiting int, created_at timestamptz)
@@ -11,7 +12,7 @@ language sql security definer set search_path = public as $$
                  then ' ' || upper(left(regexp_replace(btrim(r.reporter_name), '^.*\s', ''), 1)) || '.' else '' end,
          r.playing, r.waiting, r.created_at
   from reports r
-  where r.park_slug = p_slug and r.sport = p_sport and r.created_at > now() - interval '24 hours'
+  where r.park_slug = p_slug and r.sport = p_sport and r.created_at >= (date_trunc('day', now() at time zone 'America/Los_Angeles') at time zone 'America/Los_Angeles')
   order by r.created_at desc
   limit 50;
 $$;
