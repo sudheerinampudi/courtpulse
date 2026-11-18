@@ -94,7 +94,8 @@ function wire(){
   S.busy=false;if(error){S.err=error.message}else S.step='code';render()});
  on('verify',async()=>{const t=$('#code').value.trim();if(!t){S.err='Enter the code from your email.';return render()}
   S.busy=true;S.err='';render();
-  const {data,error}=await sb.auth.verifyOtp({email:S.email,token:t,type:'email'});
+  let {data,error}=await sb.auth.verifyOtp({email:S.email,token:t,type:'email'});
+  if(error){const r2=await sb.auth.verifyOtp({email:S.email,token:t,type:'signup'});if(!r2.error){data=r2.data;error=null}}
   S.busy=false;if(error){S.err='That code did not work. Check it and try again.';render()}else{S.user=data.user;S.step='checkin';render();loadRecent()}});
  on('chg',()=>{S.picking=!S.picking;render()});
  app.querySelectorAll('[data-park]').forEach(b=>b.onclick=()=>{const p=S.parks.find(x=>x.slug===b.dataset.park);if(!p)return;S.park=p;S.picking=false;fixSport();S.recent=[];S.live=null;loadLive();S.pl=Math.min(S.pl,mp());S.wt=Math.min(S.wt,mw());try{history.replaceState(null,'','?park='+encodeURIComponent(p.slug))}catch(e){}render();loadRecent()});
