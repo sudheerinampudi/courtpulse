@@ -69,9 +69,7 @@ function render(){
  if(S.step==='loading')h+='<div class="muted">Loading…</div>';
  else if(S.step==='nopark')h+='<div class="card"><b>Park not found</b><div class="muted">Check the QR code on the sign, or the link you were given.</div></div>';
  else if(S.step==='signin')h+=`${liveCard()}<h1>Sign in to share an update</h1><div class="muted">${esc(S.park.name)}. No app needed.</div>
-  ${['google','facebook','apple'].map(p=>`<button class="btn alt" data-oauth="${p}">Continue with ${p[0].toUpperCase()+p.slice(1)}</button>`).join('')}
-  <div class="muted" style="text-align:center">or use your email</div>
-  <div class="row"><div class="fld"><label for="fn">First name</label><input id="fn" autocomplete="given-name" value="${esc(S.first)}"></div><div class="fld"><label for="ln">Last name</label><input id="ln" autocomplete="family-name" value="${esc(S.last)}"></div></div>
+    <div class="row"><div class="fld"><label for="fn">First name</label><input id="fn" autocomplete="given-name" value="${esc(S.first)}"></div><div class="fld"><label for="ln">Last name</label><input id="ln" autocomplete="family-name" value="${esc(S.last)}"></div></div>
   <div><label for="em">Email</label><input id="em" type="email" autocomplete="email" value="${esc(S.email)}"></div>
   <div class="err" role="alert">${esc(S.err)}</div>
   <button class="btn" id="send" ${S.busy?'disabled':''}>Continue with email</button><div class="muted">We only collect first name, last name and email.</div>`;
@@ -89,7 +87,6 @@ function wire(){
  const on=(id,f)=>{const e=$('#'+id);if(e)e.onclick=f};
  app.querySelectorAll('[data-sport]').forEach(b=>b.onclick=()=>{prefs.sport=b.dataset.sport;savePrefs();S.recent=[];S.live=null;render();loadRecent();loadLive()});
  app.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{const k=b.dataset.w.slice(0,2),m=k==='pl'?mp():mw();S[k]=Math.max(0,Math.min(m,S[k]+(b.dataset.w.endsWith('+')?1:-1)));render()});
- app.querySelectorAll('[data-oauth]').forEach(b=>b.onclick=async()=>{S.err='';const {error}=await sb.auth.signInWithOAuth({provider:b.dataset.oauth,options:{redirectTo:location.origin+location.pathname+location.search}});if(error){S.err='That sign-in option is not available yet. Use email instead.';render()}});
  on('send',async()=>{S.first=$('#fn').value.trim();S.last=$('#ln').value.trim();S.email=$('#em').value.trim();
   if(!S.first||!S.last||!/^\S+@\S+\.\S+$/.test(S.email)){S.err='Enter your first name, last name and a valid email.';return render()}
   S.busy=true;S.err='';render();
