@@ -60,7 +60,7 @@ function view(){
 const ago=t=>{const m=Math.max(0,Math.round((Date.now()-new Date(t))/60000));return m<1?'just now':m+' min ago'};
 function renderPark(){
   const feat=(rows||[]).find(r=>r.slug===slug);
-  let h=`<div class="head"><img src="icon.png" alt="" width="36" height="36"><b class="sg" style="font-size:20px">CourtPulse</b></div>
+  let h=`<a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png" alt="" width="36" height="36"><b class="sg" style="font-size:20px">CourtPulse</b></a>
   <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>`;
   if(err)h+=`<div class="card" role="alert"><b>Couldn't load counts</b><div class="muted">${esc(err)}</div></div>`;
   else if(!rows)h+='<div class="muted">Loading…</div>';
@@ -70,7 +70,6 @@ function renderPark(){
     h+=`<b class="sg">Who updated</b>`;
     h+=reps.length?reps.map(r=>`<div class="card" style="flex-direction:row;justify-content:space-between;align-items:center"><div><b>${esc(r.who)}</b><div class="muted">${ago(r.created_at)}</div></div><span class="muted">${r.playing} playing · ${r.waiting} waiting</span></div>`).join(''):'<div class="muted">No updates in the last hour.</div>';
   }
-  h+=`<div class="muted" style="text-align:center"><a class="lnk" href="./">Find other parks</a></div>`;
   app.innerHTML=h;
   app.querySelectorAll('[data-sport]').forEach(b=>b.onclick=()=>{prefs.sport=b.dataset.sport;savePrefs();rows=null;reps=[];tried=true;render();load()});
 }
