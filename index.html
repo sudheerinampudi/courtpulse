@@ -94,7 +94,7 @@ function render(){
   else list.forEach(r=>{const mx=r.courts*4,n=Number(r.avg_playing);
     h+=`<a class="card" href="?park=${encodeURIComponent(r.slug)}"><div class="row"><b class="sg" style="font-size:16px">${esc(r.name)}</b><span class="num">${n}</span></div><div class="muted">${r.d!=null?r.d.toFixed(1)+' mi · ':''}${r.courts} courts · ${Number(r.avg_waiting)} waiting · ${Number(r.report_count)?Number(r.report_count)+' report'+(r.report_count==1?'':'s')+' in the last hour':'no recent reports'}</div><div class="bar"><i style="width:${Math.min(100,n/mx*100)}%"></i></div></a>`});
   const first=list[0]?list[0].slug:'border-park';
-  h+=`<a class="btn" href="checkin.html?park=${encodeURIComponent(first)}">Check in</a><div class="muted" style="text-align:center">Averages of player reports from the last hour. Refreshes every 30 seconds.</div><div class="muted" style="text-align:center"><a class="lnk" href="prototype.html">Design prototype</a></div>`;
+  h+=`<a class="btn" href="checkin.html?park=${encodeURIComponent(first)}">Check in</a><div class="muted" style="text-align:center">Averages of player reports from the last hour. Refreshes every 30 seconds.</div>`;
   app.innerHTML=h;
   app.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{prefs.view=b.dataset.view;savePrefs();render()});
   if(prefs.view==='map'&&document.getElementById('map')&&window.L){try{
