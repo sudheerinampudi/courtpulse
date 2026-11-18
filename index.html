@@ -19,7 +19,9 @@ main{max-width:440px;margin:0 auto;padding:20px 20px 40px;display:flex;flex-dire
 .bar{height:8px;border-radius:4px;background:var(--empty);overflow:hidden}.bar i{display:block;height:100%;background:var(--green)}
 .btn{min-height:52px;border:none;border-radius:16px;background:var(--lime);color:#0F2A24;font:700 16px 'Space Grotesk';cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;text-decoration:none}
 .live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--live);font-weight:600}.live:before{content:'';width:8px;height:8px;border-radius:50%;background:var(--live)}
-a.lnk{color:var(--green);font:600 13px Inter}
+a.lnk,button.lnk{color:var(--green);font:600 13px Inter;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline}
+.zip{display:flex;gap:8px}.zip input{flex:1;min-height:48px;border:1px solid var(--outline);border-radius:12px;padding:0 14px;font:400 16px Inter;background:#fff;color:var(--ink)}.zip .go{min-height:48px;padding:0 16px;border:none;border-radius:12px;background:var(--lime);color:#0F2A24;font:700 15px 'Space Grotesk';cursor:pointer}
+.chips{display:flex;gap:6px}.chips button{flex:1;min-height:40px;border:1px solid var(--outline);background:#fff;border-radius:20px;font:600 13px Inter;color:var(--ink);cursor:pointer}.chips button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
 </style></head><body><main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -29,9 +31,11 @@ const PB='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><ci
 const TN='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#D5E83A" stroke="#15332B" stroke-width="1.5"/><path d="M4.4 6.6c4.4 3.2 4.4 7.6 0 10.8M19.6 6.6c-4.4 3.2-4.4 7.6 0 10.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app=document.getElementById('app');
-let prefs={sport:'pickleball'};try{Object.assign(prefs,JSON.parse(localStorage.getItem('cn-prefs')||'{}'))}catch(e){}
-if(prefs.sport!=='tennis')prefs.sport='pickleball';
-const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,sport:prefs.sport}))}catch(e){}};
+let prefs={sport:'pickleball',zip:'',radius:5,lat:null,lng:null};try{Object.assign(prefs,JSON.parse(localStorage.getItem('cn-prefs')||'{}'))}catch(e){}
+if(prefs.sport!=='tennis')prefs.sport='pickleball';if(![1,2,5,10].includes(prefs.radius))prefs.radius=5;
+const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,...prefs}))}catch(e){}};
+const miles=(a,b,c,d)=>{const R=3958.8,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
+let msg='';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let rows=null,err='',updated=null;
 async function load(){
@@ -39,18 +43,40 @@ async function load(){
   if(error){err=error.message;rows=rows||[]}else{err='';rows=data;updated=new Date()}
   render();
 }
+function view(){
+  let list=(rows||[]).map(r=>({...r,d:(prefs.lat!=null&&r.lat!=null)?miles(prefs.lat,prefs.lng,r.lat,r.lng):null}));
+  const located=prefs.lat!=null;
+  const all=list.length;
+  if(located)list=list.filter(r=>r.d<=prefs.radius).sort((x,y)=>x.d-y.d);
+  return {list,all,located};
+}
 function render(){
-  const tot=(rows||[]).reduce((a,r)=>a+Number(r.avg_playing),0);
+  const {list,all,located}=view();
+  const tot=list.reduce((a,r)=>a+Number(r.avg_playing),0);
   let h=`<div class="head"><img src="icon.png" alt="" width="36" height="36"><b class="sg" style="font-size:20px">CourtPulse</b></div>
   <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>
-  <div><div class="muted"><span class="live">Live</span> · playing now at all parks</div><div class="big">${rows?tot:'…'}</div></div>`;
+  <form id="zipf" class="zip"><input id="zip" inputmode="numeric" maxlength="5" placeholder="ZIP code" aria-label="ZIP code" value="${esc(prefs.zip||'')}"><button class="go" type="submit">Find parks</button></form>
+  <div class="muted"><button class="lnk" id="loc" type="button">Use my location</button>${located?' · <button class="lnk" id="clr" type="button">Show all parks</button>':''}</div>
+  ${located?`<div class="chips" role="group" aria-label="Distance">${[1,2,5,10].map(r=>`<button type="button" aria-pressed="${prefs.radius===r}" data-r="${r}">${r} mi</button>`).join('')}</div>`:''}
+  ${msg?`<div class="muted" role="alert" style="color:#B3261E">${esc(msg)}</div>`:''}
+  <div><div class="muted"><span class="live">Live</span> · playing now${located?' within '+prefs.radius+' mi':' at all parks'}</div><div class="big">${rows?tot:'…'}</div></div>`;
   if(err)h+=`<div class="card" role="alert"><b>Couldn't load counts</b><div class="muted">${esc(err)}</div></div>`;
-  else if(rows&&!rows.length)h+='<div class="muted">No parks for this sport yet.</div>';
-  (rows||[]).forEach(r=>{const mx=r.courts*4,n=Number(r.avg_playing);
-    h+=`<a class="card" href="checkin.html?park=${encodeURIComponent(r.slug)}"><div class="row"><b class="sg" style="font-size:16px">${esc(r.name)}</b><span class="num">${n}</span></div><div class="muted">${r.courts} courts · ${Number(r.avg_waiting)} waiting · ${Number(r.report_count)?Number(r.report_count)+' report'+(r.report_count==1?'':'s')+' in last 10 min':'no recent reports'}</div><div class="bar"><i style="width:${Math.min(100,n/mx*100)}%"></i></div></a>`});
-  h+=`<a class="btn" href="checkin.html?park=lakeside">Check in</a><div class="muted" style="text-align:center">Averages of player reports from the last 10 minutes. Refreshes every 30 seconds.</div><div class="muted" style="text-align:center"><a class="lnk" href="prototype.html">Design prototype</a></div>`;
+  else if(rows&&!list.length)h+=`<div class="card"><b>No ${prefs.sport} parks within ${prefs.radius} mi</b><div class="muted">${all?'Try a larger distance, or show all parks.':'No parks for this sport yet.'}</div></div>`;
+  list.forEach(r=>{const mx=r.courts*4,n=Number(r.avg_playing);
+    h+=`<a class="card" href="checkin.html?park=${encodeURIComponent(r.slug)}"><div class="row"><b class="sg" style="font-size:16px">${esc(r.name)}</b><span class="num">${n}</span></div><div class="muted">${r.d!=null?r.d.toFixed(1)+' mi · ':''}${r.courts} courts · ${Number(r.avg_waiting)} waiting · ${Number(r.report_count)?Number(r.report_count)+' report'+(r.report_count==1?'':'s')+' in last 10 min':'no recent reports'}</div><div class="bar"><i style="width:${Math.min(100,n/mx*100)}%"></i></div></a>`});
+  const first=list[0]?list[0].slug:'border-park';
+  h+=`<a class="btn" href="checkin.html?park=${encodeURIComponent(first)}">Check in</a><div class="muted" style="text-align:center">Averages of player reports from the last 10 minutes. Refreshes every 30 seconds.</div><div class="muted" style="text-align:center"><a class="lnk" href="prototype.html">Design prototype</a></div>`;
   app.innerHTML=h;
   app.querySelectorAll('[data-sport]').forEach(b=>b.onclick=()=>{prefs.sport=b.dataset.sport;savePrefs();rows=null;render();load()});
+  app.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{prefs.radius=+b.dataset.r;savePrefs();render()});
+  document.getElementById('zipf').onsubmit=async e=>{e.preventDefault();const z=document.getElementById('zip').value.trim();
+    if(!/^\d{5}$/.test(z)){msg='Enter a 5-digit ZIP code.';return render()}
+    try{const r=await fetch('https://api.zippopotam.us/us/'+z);if(!r.ok)throw 0;const j=await r.json();const p=j.places[0];
+      prefs.zip=z;prefs.lat=parseFloat(p.latitude);prefs.lng=parseFloat(p.longitude);msg='';savePrefs()}
+    catch(_){msg='Could not find that ZIP code.'}render()};
+  const loc=document.getElementById('loc');if(loc)loc.onclick=()=>{if(!navigator.geolocation){msg='Location is not available in this browser.';return render()}
+    navigator.geolocation.getCurrentPosition(p=>{prefs.lat=p.coords.latitude;prefs.lng=p.coords.longitude;prefs.zip='';msg='';savePrefs();render()},()=>{msg='Could not get your location. Enter a ZIP code instead.';render()})};
+  const clr=document.getElementById('clr');if(clr)clr.onclick=()=>{prefs.lat=null;prefs.lng=null;prefs.zip='';savePrefs();render()};
 }
 render();load();setInterval(load,30000);
 </script></body></html>

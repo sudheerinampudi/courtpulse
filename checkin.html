@@ -39,7 +39,7 @@ const TN='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><ci
 const $=(s,r=document)=>r.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const app=$('#app');
-const slug=new URLSearchParams(location.search).get('park')||'lakeside';
+const slug=new URLSearchParams(location.search).get('park')||'border-park';
 let prefs={sport:'pickleball'};try{Object.assign(prefs,JSON.parse(localStorage.getItem('cn-prefs')||'{}'))}catch(e){}
 const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,sport:prefs.sport}))}catch(e){}};
 const S={step:'loading',park:null,parks:[],picking:false,user:null,email:'',first:'',last:'',err:'',busy:false,pl:12,wt:2,toast:false,recent:[]};
