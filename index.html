@@ -88,7 +88,7 @@ function render(){
   ${located?`<div class="chips" role="group" aria-label="Distance">${[1,2,5,10].map(r=>`<button type="button" aria-pressed="${prefs.radius===r}" data-r="${r}">${r} mi</button>`).join('')}</div>`:''}
   <div class="seg" role="group" aria-label="View"><button type="button" aria-pressed="${prefs.view==='list'}" data-view="list">List</button><button type="button" aria-pressed="${prefs.view==='map'}" data-view="map">Map</button></div>
   ${msg?`<div class="muted" role="alert" style="color:#B3261E">${esc(msg)}</div>`:''}
-  ${feat&&list.length?'<b class="sg">More parks</b>':''}<div><div class="muted"><span class="live">Live</span> · playing now${located?' within '+prefs.radius+' mi':' at all parks'}</div><div class="big">${rows?tot:'…'}</div></div>`;
+  `;
   if(err)h+=`<div class="card" role="alert"><b>Couldn't load counts</b><div class="muted">${esc(err)}</div></div>`;
   else if(rows&&!list.length&&!(feat&&!located))h+=`<div class="card"><b>No ${prefs.sport} parks within ${prefs.radius} mi</b><div class="muted">${all?'Try a larger distance, or show all parks.':'No parks for this sport yet.'}</div></div>`;
   if(prefs.view==='map'){if(rows&&list.length)h+='<div id="map" class="mapbox" role="region" aria-label="Map of parks"></div>'}
