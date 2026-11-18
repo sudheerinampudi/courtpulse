@@ -21,6 +21,7 @@ main{max-width:440px;margin:0 auto;padding:20px 20px 40px;display:flex;flex-dire
 .live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--live);font-weight:600}.live:before{content:'';width:8px;height:8px;border-radius:50%;background:var(--live)}
 a.lnk,button.lnk{color:var(--green);font:600 13px Inter;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline}
 .zip{display:flex;gap:8px}.zip input{flex:1;min-height:48px;border:1px solid var(--outline);border-radius:12px;padding:0 14px;font:400 16px Inter;background:#fff;color:var(--ink)}.zip .go{min-height:48px;padding:0 16px;border:none;border-radius:12px;background:var(--lime);color:#0F2A24;font:700 15px 'Space Grotesk';cursor:pointer}
+.feat{gap:10px;padding:18px}.row2{display:flex;gap:36px;align-items:flex-end}
 .chips{display:flex;gap:6px}.chips button{flex:1;min-height:40px;border:1px solid var(--outline);background:#fff;border-radius:20px;font:600 13px Inter;color:var(--ink);cursor:pointer}.chips button[aria-pressed=true]{background:var(--ink);color:#fff;border-color:var(--ink)}
 </style></head><body><main id="app"></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -37,10 +38,12 @@ const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{
 const miles=(a,b,c,d)=>{const R=3958.8,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
 let msg='';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let rows=null,err='',updated=null;
+let rows=null,err='',updated=null,tried=false;
+const slug=new URLSearchParams(location.search).get('park');
 async function load(){
   const {data,error}=await sb.rpc('park_counts',{p_sport:prefs.sport});
   if(error){err=error.message;rows=rows||[]}else{err='';rows=data;updated=new Date()}
+  if(slug&&!err&&!(rows||[]).some(r=>r.slug===slug)&&!tried){tried=true;prefs.sport=prefs.sport==='tennis'?'pickleball':'tennis';savePrefs();rows=null;return load()}
   render();
 }
 function view(){
@@ -52,14 +55,17 @@ function view(){
 }
 function render(){
   const {list,all,located}=view();
+  const feat=slug?(rows||[]).find(r=>r.slug===slug):null;
+  if(feat)list=list.filter(r=>r.slug!==slug);
   const tot=list.reduce((a,r)=>a+Number(r.avg_playing),0);
   let h=`<div class="head"><img src="icon.png" alt="" width="36" height="36"><b class="sg" style="font-size:20px">CourtPulse</b></div>
   <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>
+  ${feat?`<div class="card feat"><div class="muted"><span class="live">Live</span> · ${prefs.sport==='tennis'?'Tennis':'Pickleball'} · ${feat.courts} courts</div><b class="sg" style="font-size:22px">${esc(feat.name)}</b><div class="row2"><div><div class="big">${Number(feat.avg_playing)}</div><div class="muted">playing now</div></div><div><div class="big" style="color:var(--ink)">${Number(feat.avg_waiting)}</div><div class="muted">waiting</div></div></div><div class="muted">${Number(feat.report_count)?'Average of '+Number(feat.report_count)+' report'+(feat.report_count==1?'':'s')+' in the last 10 minutes':'No reports in the last 10 minutes. Be the first!'}</div><a class="btn" href="checkin.html?park=${encodeURIComponent(feat.slug)}">Share update</a></div>`:''}
   <form id="zipf" class="zip"><input id="zip" inputmode="numeric" maxlength="5" placeholder="ZIP code" aria-label="ZIP code" value="${esc(prefs.zip||'')}"><button class="go" type="submit">Find parks</button></form>
   <div class="muted"><button class="lnk" id="loc" type="button">Use my location</button>${located?' · <button class="lnk" id="clr" type="button">Show all parks</button>':''}</div>
   ${located?`<div class="chips" role="group" aria-label="Distance">${[1,2,5,10].map(r=>`<button type="button" aria-pressed="${prefs.radius===r}" data-r="${r}">${r} mi</button>`).join('')}</div>`:''}
   ${msg?`<div class="muted" role="alert" style="color:#B3261E">${esc(msg)}</div>`:''}
-  <div><div class="muted"><span class="live">Live</span> · playing now${located?' within '+prefs.radius+' mi':' at all parks'}</div><div class="big">${rows?tot:'…'}</div></div>`;
+  ${feat?'<b class="sg">More parks</b>':''}<div><div class="muted"><span class="live">Live</span> · playing now${located?' within '+prefs.radius+' mi':' at all parks'}</div><div class="big">${rows?tot:'…'}</div></div>`;
   if(err)h+=`<div class="card" role="alert"><b>Couldn't load counts</b><div class="muted">${esc(err)}</div></div>`;
   else if(rows&&!list.length)h+=`<div class="card"><b>No ${prefs.sport} parks within ${prefs.radius} mi</b><div class="muted">${all?'Try a larger distance, or show all parks.':'No parks for this sport yet.'}</div></div>`;
   list.forEach(r=>{const mx=r.courts*4,n=Number(r.avg_playing);
