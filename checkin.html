@@ -75,8 +75,8 @@ async function init(){
   if(error||!pk){S.step='nopark';return render()}
   S.park=pk;fixSport();
   const {data:all}=await sb.from('parks').select('*').order('name');S.parks=all||[pk];
-  const {data:{session}}=await sb.auth.getSession();S.user=session?.user||null;
-  sb.auth.onAuthStateChange((_e,s)=>{const had=!!S.user;S.user=s?.user||null;if(S.user&&!had){S.step='checkin';render()}});
+  const {data:{session}}=await sb.auth.getSession();S.user=session?.user&&!session.user.is_anonymous?session.user:null;
+  sb.auth.onAuthStateChange((_e,s)=>{const had=!!S.user;S.user=s?.user&&!s.user.is_anonymous?s.user:null;if(S.user&&!had){S.step='checkin';render()}});
   S.step=S.user?'checkin':'signin';render();
 }
 function fixSport(){const p=S.park;if(!(p.tennis_courts>0)&&prefs.sport==='tennis')prefs.sport='pickleball';if(!(p.pickleball_courts>0)&&prefs.sport==='pickleball')prefs.sport='tennis'}
