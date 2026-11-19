@@ -45,7 +45,7 @@ const app=$('#app');
 const slug=new URLSearchParams(location.search).get('park')||'border-park';
 let prefs={sport:'pickleball'};try{Object.assign(prefs,JSON.parse(localStorage.getItem('cn-prefs')||'{}'))}catch(e){}
 const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,sport:prefs.sport}))}catch(e){}};
-const S={arrive:'',live:null,step:'loading',park:null,parks:[],picking:false,user:null,email:'',first:'',last:'',err:'',busy:false,pl:12,wt:2,toast:false,recent:[]};
+const S={arrive:'',toastText:'Update shared',live:null,step:'loading',park:null,parks:[],picking:false,user:null,email:'',first:'',last:'',err:'',busy:false,pl:12,wt:2,errCome:'',toast:false,recent:[]};
 let sb=null;
 const head=()=>`<div class="topbar"><a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></a><a class="homebtn" href="./"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</a></div>`;
 const courts=()=>S.park?(prefs.sport==='tennis'?S.park.tennis_courts:S.park.pickleball_courts):0;
@@ -89,10 +89,10 @@ function render(){
   h+=`<div class="muted">Signed in as ${esc(fullName(S.user))} · <button class="lnk" id="out">Sign out</button></div>
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="muted">Reporting for</div><b class="sg" style="font-size:17px">${esc(S.park.name)}</b><div class="muted">${courts()} ${prefs.sport} courts</div></div><button class="btn alt" id="chg" style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">${S.picking?'Close':'Change park'}</button></div>${S.picking?`<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${S.parks.map(p=>`<button class="btn alt" data-park="${esc(p.slug)}" style="text-align:left;padding:0 14px;${p.slug===S.park.slug?'border-color:var(--green);font-weight:700':''}">${esc(p.name)}</button>`).join('')}</div>`:''}</div>${sportSeg()}
   ${[['pl',mp(),'Playing right now','All courts combined · max '+mp()],['wt',mw(),'Waiting for a court','People in line · max '+mw()]].map(([k,m,t,s])=>`<div class="card cnt"><b class="sg" style="font-size:16px">${t}</b><div class="muted" style="font-size:12px">${s}</div><div class="step"><button data-w="${k}-" aria-label="fewer">−</button><span class="n" ${k==='wt'?'style="color:var(--ink)"':''}>${S[k]}</span><button class="p" data-w="${k}+" aria-label="more" ${S[k]>=m?'disabled':''}>+</button></div></div>`).join('')}
-  <div class="card cnt"><b class="sg" style="font-size:16px">When are you coming?</b><div class="muted" style="font-size:12px">Estimated arrival time. Keep "Here now" if you are already at the park.</div><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><input id="arr" type="time" aria-label="Estimated arrival time" value="${esc(S.arrive||hhmm(new Date()))}" style="flex:1;min-height:44px"><button class="btn alt" id="here" type="button" aria-pressed="${S.arrive===''}" style="width:auto;padding:0 14px;min-height:44px;border-radius:22px;${S.arrive===''?'background:var(--ink);color:#fff;border-color:var(--ink)':''}">Here now</button></div>${(()=>{const sg=suggestion();return sg&&sg!==S.arrive?`<div><button class="btn alt" id="sug" type="button" style="width:auto;padding:0 12px;min-height:36px;border-radius:18px;font-size:13px">Suggested: ${t12(sg)}</button></div>`:''})()}</div>
   <div class="err" role="alert">${esc(S.err)}</div><div class="stick"><button class="btn" id="share" ${S.busy?'disabled':''}>Share update</button></div><div class="muted" style="text-align:center">Other players see the average of recent updates.</div>
-  ${S.recent.length?`<b class="sg">Today's updates</b>${S.recent.map(r=>`<div class="card" style="flex-direction:row;justify-content:space-between"><b>${esc(r.reporter_name)}</b><span class="muted">${r.playing} playing · ${r.waiting} waiting${r.arriving_at?' · arriving '+fmtT(r.arriving_at):''}</span></div>`).join('')}`:''}`}
- if(S.toast)h+='<div class="pill" id="pill">Update shared</div>';
+  <div class="card cnt"><b class="sg" style="font-size:16px">Coming later?</b><div class="muted" style="font-size:12px">Let others know when you plan to arrive. This is separate from Share update.</div><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><input id="arr" type="time" aria-label="Estimated arrival time" value="${esc(S.arrive||suggestion()||'')}" style="flex:1;min-height:44px"><button class="btn alt" id="come" type="button" ${S.busy?'disabled':''} style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">I'm coming</button></div>${S.errCome?`<div class="err" role="alert">${esc(S.errCome)}</div>`:''}</div>
+  ${S.recent.length?`<b class="sg">Today's updates</b>${S.recent.map(r=>`<div class="card" style="flex-direction:row;justify-content:space-between"><b>${esc(r.reporter_name)}</b><span class="muted">${r.playing} playing · ${r.waiting} waiting</span></div>`).join('')}`:''}`}
+ if(S.toast)h+='<div class="pill" id="pill">'+esc(S.toastText)+'</div>';
  app.innerHTML=h;wire();
 }
 function wire(){
@@ -109,24 +109,26 @@ function wire(){
   let {data,error}=await sb.auth.verifyOtp({email:S.email,token:t,type:'email'});
   if(error){const r2=await sb.auth.verifyOtp({email:S.email,token:t,type:'signup'});if(!r2.error){data=r2.data;error=null}}
   S.busy=false;if(error){S.err='That code did not work. Check it and try again.';render()}else{S.user=data.user;S.step='checkin';render();loadRecent()}});
- on('here',()=>{S.arrive='';render()});
- on('sug',()=>{S.arrive=suggestion()||'';render()});
- {const a=$('#arr');if(a)a.onchange=()=>{S.arrive=a.value||'';render()}}
+ {const a=$('#arr');if(a)a.oninput=a.onchange=()=>{S.arrive=a.value||''}}
+ on('come',async()=>{const a=$('#arr');const v=(a&&a.value)||S.arrive||'';S.errCome='';
+  if(!v){S.errCome='Pick an arrival time.';return render()}
+  S.arrive=v;const [hh,mm]=v.split(':').map(Number);const d=new Date();d.setHours(hh,mm,0,0);
+  if(d.getTime()<Date.now()-10*60000){S.errCome='That time has already passed. Pick a later time.';return render()}
+  S.busy=true;render();
+  const {error}=await sb.from('arrivals').insert({park_slug:S.park.slug,sport:prefs.sport,reporter_name:fullName(S.user),arriving_at:d.toISOString()});
+  S.busy=false;if(error){S.errCome=error.message;return render()}
+  S.arrive='';S.toastText='Arrival shared';S.toast=true;render();const p=$('#pill');setTimeout(()=>{p&&(p.style.opacity=0)},1800);setTimeout(()=>{S.toast=false;render()},2400)});
  on('chg',()=>{S.picking=!S.picking;render()});
  app.querySelectorAll('[data-park]').forEach(b=>b.onclick=()=>{const p=S.parks.find(x=>x.slug===b.dataset.park);if(!p)return;S.park=p;S.picking=false;fixSport();S.recent=[];S.live=null;loadLive();S.pl=Math.min(S.pl,mp());S.wt=Math.min(S.wt,mw());try{history.replaceState(null,'','?park='+encodeURIComponent(p.slug))}catch(e){}render();loadRecent()});
  on('back',()=>{S.step='signin';S.err='';render()});
  on('out',async()=>{await sb.auth.signOut();S.user=null;S.step='signin';render()});
  on('share',async()=>{S.busy=true;S.err='';render();
-  let arriving=null;
-  if(S.arrive){const [hh,mm]=S.arrive.split(':').map(Number);const d=new Date();d.setHours(hh,mm,0,0);
-    if(d.getTime()<Date.now()-10*60000){S.busy=false;S.err='That arrival time has already passed. Pick a later time, or tap Here now.';return render()}
-    arriving=d.toISOString()}
-  const {error}=await sb.from('reports').insert({park_slug:S.park.slug,sport:prefs.sport,reporter_name:fullName(S.user),playing:S.pl,waiting:S.wt,arriving_at:arriving});
+  const {error}=await sb.from('reports').insert({park_slug:S.park.slug,sport:prefs.sport,reporter_name:fullName(S.user),playing:S.pl,waiting:S.wt});
   S.busy=false;if(error){S.err=error.message;return render()}
-  S.arrive='';S.toast=true;render();await loadRecent();const p=$('#pill');setTimeout(()=>{p&&(p.style.opacity=0)},1800);setTimeout(()=>{S.toast=false;render()},2400)});
+  S.toastText='Update shared';S.toast=true;render();await loadRecent();const p=$('#pill');setTimeout(()=>{p&&(p.style.opacity=0)},1800);setTimeout(()=>{S.toast=false;render()},2400)});
 }
 async function loadRecent(){if(!S.user||!S.park)return;
- const {data}=await sb.from('reports').select('reporter_name,playing,waiting,created_at,arriving_at').eq('park_slug',S.park.slug).eq('sport',prefs.sport).order('created_at',{ascending:false}).limit(30);
+ const {data}=await sb.from('reports').select('reporter_name,playing,waiting,created_at').eq('park_slug',S.park.slug).eq('sport',prefs.sport).order('created_at',{ascending:false}).limit(30);
  S.recent=data||[];if(S.step==='checkin'&&!S.toast)render()}
 init().then(()=>{loadRecent();loadLive();setInterval(loadLive,30000)});
 </script></body></html>
