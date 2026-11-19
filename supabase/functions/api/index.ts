@@ -6,7 +6,7 @@
 // Returns counts only: never names or emails.
 const SB = Deno.env.get('SUPABASE_URL');
 const SK = Deno.env.get('CP_SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-const SITE = 'https://sudheerinampudi.github.io/courtpulse/';
+const SITE = 'https://sudheerinampudi.github.io/playpulse/';
 const LABELS = ['Free', 'Moderate', 'Busy', 'Very busy'];
 const WINDOW_MIN = 120; // must match the window in park_counts (2 hours)
 const CORS = {
