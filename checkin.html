@@ -95,9 +95,9 @@ function render(){
  else if(S.step==='checkin'){
   h+=`<div class="muted">Signed in as ${esc(fullName(S.user))} · <button class="lnk" id="out">Sign out</button></div>
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="muted">Reporting for</div><b class="sg" style="font-size:17px">${esc(S.park.name)}</b><div class="muted">${courts()} ${prefs.sport} courts</div></div><button class="btn alt" id="chg" style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">${S.picking?'Close':'Change park'}</button></div>${S.picking?`<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${S.parks.map(p=>`<button class="btn alt" data-park="${esc(p.slug)}" style="text-align:left;padding:0 14px;${p.slug===S.park.slug?'border-color:var(--green);font-weight:700':''}">${esc(p.name)}</button>`).join('')}</div>`:''}</div>${sportSeg()}
-  <div class="card cnt"><b class="sg" style="font-size:16px">Coming later?</b><div class="muted" style="font-size:12px">Let others know when you plan to arrive. This is separate from Share update.</div><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><input id="arr" type="time" aria-label="Estimated arrival time" value="${esc(S.arrive||suggestion()||'')}" style="flex:1;min-height:44px"><button class="btn alt" id="come" type="button" ${S.busy?'disabled':''} style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">I'm coming</button></div>${S.errCome?`<div class="err" role="alert">${esc(S.errCome)}</div>`:''}</div>
-  <div class="card cnt"><b class="sg" style="font-size:16px">How busy is it right now?</b><div class="lvs">${LV.map((l,k)=>`<button type="button" class="lvb" data-lv="${k}" aria-pressed="${S.lv===k}" style="${S.lv===k?'color:'+l.c:''}"><b style="color:${l.c}">${l.n}</b><span>${lvHint(k,courts())}</span></button>`).join('')}</div></div>
-  <div class="err" role="alert">${esc(S.err)}</div><div class="stick"><button class="btn" id="share" ${S.busy?'disabled':''}>Share update</button></div><div class="muted" style="text-align:center">Other players see the average of recent updates.</div>
+  <div class="card cnt"><b class="sg" style="font-size:16px">Coming later?</b><div class="muted" style="font-size:12px">Let others know when you plan to arrive. This is separate from the busy level.</div><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><input id="arr" type="time" aria-label="Estimated arrival time" value="${esc(S.arrive||suggestion()||'')}" style="flex:1;min-height:44px"><button class="btn alt" id="come" type="button" ${S.busy?'disabled':''} style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">I'm coming</button></div>${S.errCome?`<div class="err" role="alert">${esc(S.errCome)}</div>`:''}</div>
+  <div class="card cnt"><b class="sg" style="font-size:16px">How busy is it right now?</b><div class="lvs">${LV.map((l,k)=>`<button type="button" class="lvb" data-lv="${k}" ${S.busy?'disabled':''} aria-pressed="${S.lv===k}" style="${S.lv===k?'color:'+l.c:''}"><b style="color:${l.c}">${l.n}</b><span>${lvHint(k,courts())}</span></button>`).join('')}</div></div>
+  <div class="err" role="alert">${esc(S.err)}</div><div class="muted" style="text-align:center">Tap a level to share it. Others see the average of recent updates.</div>
   ${S.recent.length?`<b class="sg">Today's updates</b>${S.recent.map(r=>`<div class="card" style="flex-direction:row;justify-content:space-between"><b>${esc(r.reporter_name)}</b><span class="muted">${r.level!=null?`<b style="color:${LV[r.level].c}">${LV[r.level].n}</b>`:`${r.playing} playing · ${r.waiting} waiting`}</span></div>`).join('')}`:''}`}
  if(S.toast)h+='<div class="pill" id="pill">'+esc(S.toastText)+'</div>';
  app.innerHTML=h;wire();
@@ -105,7 +105,10 @@ function render(){
 function wire(){
  const on=(id,f)=>{const e=$('#'+id);if(e)e.onclick=f};
  app.querySelectorAll('[data-sport]').forEach(b=>b.onclick=()=>{prefs.sport=b.dataset.sport;savePrefs();S.recent=[];S.live=null;render();loadRecent();loadLive()});
- app.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{S.lv=Number(b.dataset.lv);S.err='';render()});
+ app.querySelectorAll('[data-lv]').forEach(b=>b.onclick=async()=>{if(S.busy)return;S.lv=Number(b.dataset.lv);S.busy=true;S.err='';render();
+  const {error}=await sb.from('reports').insert({park_slug:S.park.slug,sport:prefs.sport,reporter_name:fullName(S.user),level:S.lv});
+  S.busy=false;if(error){S.lv=null;S.err=error.message;return render()}
+  S.toastText='Thanks! Update shared';S.toast=true;render();await loadRecent();const p=$('#pill');setTimeout(()=>{p&&(p.style.opacity=0)},1800);setTimeout(()=>{S.toast=false;S.lv=null;render()},2400)});
  on('send',async()=>{S.first=$('#fn').value.trim();S.last=$('#ln').value.trim();S.email=$('#em').value.trim();
   if(!S.first||!S.last||!/^\S+@\S+\.\S+$/.test(S.email)){S.err='Enter your first name, last name and a valid email.';return render()}
   S.busy=true;S.err='';render();
@@ -129,11 +132,6 @@ function wire(){
  app.querySelectorAll('[data-park]').forEach(b=>b.onclick=()=>{const p=S.parks.find(x=>x.slug===b.dataset.park);if(!p)return;S.park=p;S.picking=false;fixSport();S.recent=[];S.live=null;loadLive();S.lv=null;try{history.replaceState(null,'','?park='+encodeURIComponent(p.slug))}catch(e){}render();loadRecent()});
  on('back',()=>{S.step='signin';S.err='';render()});
  on('out',async()=>{await sb.auth.signOut();S.user=null;S.step='signin';render()});
- on('share',async()=>{if(S.lv==null){S.err='Tap how busy it is first.';return render()}
-  S.busy=true;S.err='';render();
-  const {error}=await sb.from('reports').insert({park_slug:S.park.slug,sport:prefs.sport,reporter_name:fullName(S.user),level:S.lv});
-  S.busy=false;if(error){S.err=error.message;return render()}
-  S.lv=null;S.toastText='Update shared';S.toast=true;render();await loadRecent();const p=$('#pill');setTimeout(()=>{p&&(p.style.opacity=0)},1800);setTimeout(()=>{S.toast=false;render()},2400)});
 }
 async function loadRecent(){if(!S.user||!S.park)return;
  const {data}=await sb.from('reports').select('reporter_name,level,playing,waiting,created_at').eq('park_slug',S.park.slug).eq('sport',prefs.sport).order('created_at',{ascending:false}).limit(30);
