@@ -7,6 +7,7 @@
 const SB = Deno.env.get('SUPABASE_URL');
 const SK = Deno.env.get('CP_SERVICE_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const SITE = 'https://sudheerinampudi.github.io/courtpulse/';
+const LABELS = ['Free', 'Moderate', 'Busy', 'Very busy'];
 const WINDOW_MIN = 120; // must match the window in park_counts (2 hours)
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -74,8 +75,11 @@ Deno.serve(async (req) => {
   const shape = (r, d) => ({
     slug: r.slug, name: r.name, sport, courts: r.courts, lat: r.lat, lng: r.lng,
     distance_miles: d == null ? null : Math.round(d * 10) / 10,
-    avg_playing: Number(r.avg_playing), avg_waiting: Number(r.avg_waiting),
-    max_playing: r.courts * 4, max_waiting: r.courts * 2,
+    busyness: r.avg_level == null ? null : LABELS[Math.max(0, Math.min(3, Math.round(Number(r.avg_level))))],
+    busyness_level: r.avg_level == null ? null : Math.max(0, Math.min(3, Math.round(Number(r.avg_level)))),
+    avg_level: r.avg_level == null ? null : Number(r.avg_level),
+    capacity_players: r.courts * 4,
+    arriving_today: Number(r.arriving_today),
     reports_in_window: Number(r.report_count),
   });
   const meta = { as_of: new Date().toISOString(), window_minutes: WINDOW_MIN, attribution: `Data from CourtPulse (${SITE})` };

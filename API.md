@@ -27,7 +27,8 @@ curl -H "x-api-key: YOUR_KEY" \
     {
       "slug": "mountain-view-park", "name": "Mountain View Park", "sport": "tennis",
       "courts": 2, "lat": 33.9506, "lng": -117.5997, "distance_miles": 1.2,
-      "avg_playing": 6, "avg_waiting": 1, "max_playing": 8, "max_waiting": 4,
+      "busyness": "Busy", "busyness_level": 2, "avg_level": 2.0,
+      "capacity_players": 8, "arriving_today": 3,
       "reports_in_window": 3
     }
   ],
@@ -41,9 +42,10 @@ curl -H "x-api-key: YOUR_KEY" \
 One park, same fields (no distance).
 
 ## Reading the numbers
-- `avg_playing` / `avg_waiting`: average of player reports in the last `window_minutes` (120).
-- `reports_in_window`: how many reports the average is based on. `0` means no recent data; treat the 0s as "unknown", not "empty".
-- Counts are self-reported by players and may be approximate.
+- `busyness` / `busyness_level`: Free (0), Moderate (1), Busy (2), Very busy (3): the average of player reports in the last `window_minutes` (120), rounded. `avg_level` is the unrounded 0-3 average. All are `null` when there are no recent reports.
+- `capacity_players`: about 4 players per court. `arriving_today`: players coming later today.
+- `reports_in_window`: how many reports the average is based on. `0` means no recent data; `busyness` is `null` (unknown, not free).
+- Busyness is self-reported by players and may be approximate.
 
 ## Errors
 `{ "error": { "code": "...", "message": "..." } }` with `400` bad parameter, `401` missing/invalid key, `404` not found, `429` rate limited.

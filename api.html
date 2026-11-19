@@ -62,10 +62,11 @@ td{overflow-wrap:anywhere}th{white-space:nowrap}td code,th code{word-break:break
       "lat": 33.9506,
       "lng": -117.5997,
       "distance_miles": 2.1,
-      "avg_playing": 8,
-      "avg_waiting": 4,
-      "max_playing": 8,
-      "max_waiting": 4,
+      "busyness": "Busy",
+      "busyness_level": 2,
+      "avg_level": 2.0,
+      "capacity_players": 8,
+      "arriving_today": 3,
       "reports_in_window": 1
     }
   ],
@@ -85,12 +86,13 @@ td{overflow-wrap:anywhere}th{white-space:nowrap}td code,th code{word-break:break
 <h2>Reading the numbers</h2>
 <table>
 <tr><th>Field</th><th>Meaning</th></tr>
-<tr><td><code>avg_playing</code>, <code>avg_waiting</code></td><td>Average of player reports in the last <code>window_minutes</code> (currently 120).</td></tr>
-<tr><td><code>reports_in_window</code></td><td>How many reports the average is based on. <strong>0 means no recent data</strong>: treat the zeros as "unknown", not "empty courts".</td></tr>
-<tr><td><code>max_playing</code>, <code>max_waiting</code></td><td>Largest values a player can report: 4 playing and 2 waiting per court.</td></tr>
+<tr><td><code>busyness</code>, <code>busyness_level</code></td><td>How busy the courts are: <code>Free</code> (0), <code>Moderate</code> (1), <code>Busy</code> (2) or <code>Very busy</code> (3). It is the average of player reports in the last <code>window_minutes</code> (currently 120), rounded. <code>avg_level</code> is the unrounded average (0 to 3). All three are <code>null</code> when there are no recent reports.</td></tr>
+<tr><td><code>reports_in_window</code></td><td>How many reports the average is based on. <strong>0 means no recent data</strong>: <code>busyness</code> is then <code>null</code>, which means "unknown", not "free".</td></tr>
+<tr><td><code>capacity_players</code></td><td>Rough number of players the courts hold (4 per court), useful for judging what a level means at that park.</td></tr>
+<tr><td><code>arriving_today</code></td><td>Players who said they are coming later today.</td></tr>
 <tr><td><code>distance_miles</code></td><td>Straight-line distance from the ZIP or coordinates. Only present on the list endpoint with a location.</td></tr>
 </table>
-<p class="muted">Counts are reported by players and are approximate. They can be wrong or out of date.</p>
+<p class="muted">Busyness is reported by players and are approximate. They can be wrong or out of date.</p>
 
 <h2>Errors</h2>
 <pre><code>{ "error": { "code": "invalid_key", "message": "That API key is not valid or has been revoked." } }</code></pre>
