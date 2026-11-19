@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CourtPulse API</title>
+<link rel="icon" href="favicon.png?v=4"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--page:#F6F8EF;--ring:#DCE5D0;--ink:#15332B;--muted:#5E7168;--outline:#B4C4AA;--lime:#D9F24A;--green:#1F6B3F}
+*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif}
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;line-height:1.2}h1{font-size:32px;margin:8px 0 6px}h2{font-size:22px;margin:32px 0 8px}h3{font-size:17px;margin:20px 0 4px}
+main{max-width:760px;margin:0 auto;padding:16px 20px 64px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.head{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;font:700 20px 'Space Grotesk'}.head img{width:40px;height:40px;display:block}
+.homebtn{min-height:40px;padding:0 14px;border:1px solid var(--outline);border-radius:20px;background:#fff;color:var(--ink);font:600 13px Inter;text-decoration:none;display:flex;align-items:center}
+.muted{color:var(--muted)}
+pre{background:#fff;border:1px solid var(--ring);border-radius:12px;padding:14px;overflow:auto;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}
+code{font:13px ui-monospace,Menlo,Consolas,monospace;background:#fff;border:1px solid var(--ring);border-radius:6px;padding:1px 5px}pre code{border:0;padding:0;background:none}
+table{border-collapse:collapse;width:100%;background:#fff;border:1px solid var(--ring);border-radius:12px;overflow:hidden;font-size:14px}th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--ring);vertical-align:top}th{background:#EEF3E4}
+.note{background:#FFF8D6;border:1px solid #E6D77A;border-radius:12px;padding:10px 14px;font-size:14px}
+a{color:var(--green)}
+td{overflow-wrap:anywhere}th{white-space:nowrap}td code,th code{word-break:break-all}
+</style></head><body><main>
+<div class="topbar"><a class="head" href="./"><img src="icon.png?v=4" alt="">CourtPulse</a><a class="homebtn" href="./">Home</a></div>
+
+<h1>CourtPulse API</h1>
+<p class="muted">Live, crowd-reported player counts at tennis and pickleball courts. Read-only. Counts only: no names or emails. Version 1.</p>
+<p>By using the API you agree to the <a href="terms.html">API Terms of Use</a>. To request a key, contact <strong>[contact email]</strong>.</p>
+
+<h2>Basics</h2>
+<table>
+<tr><th>Base URL</th><td><code>https://wjedvyqtqgvclxxsxyox.supabase.co/functions/v1/api</code></td></tr>
+<tr><th>Authentication</th><td>Send your key in the <code>x-api-key</code> header on every request.</td></tr>
+<tr><th>Rate limit</th><td>60 requests per minute per key by default. Every response includes <code>X-RateLimit-Limit</code> and <code>X-RateLimit-Remaining</code>. Over the limit returns <code>429</code>.</td></tr>
+<tr><th>Format</th><td>JSON over HTTPS, <code>GET</code> only. Cross-origin requests (CORS) are allowed.</td></tr>
+<tr><th>Attribution</th><td>Please credit "Data from CourtPulse" with a link to <a href="./">this site</a>.</td></tr>
+</table>
+
+<h2>List parks</h2>
+<p><code>GET /v1/parks</code></p>
+<table>
+<tr><th>Parameter</th><th>Meaning</th></tr>
+<tr><td><code>sport</code></td><td><code>pickleball</code> (default) or <code>tennis</code></td></tr>
+<tr><td><code>zip</code></td><td>5-digit US ZIP code. Sorts by distance and filters by <code>radius</code>.</td></tr>
+<tr><td><code>lat</code>, <code>lng</code></td><td>Alternative to <code>zip</code>.</td></tr>
+<tr><td><code>radius</code></td><td>Miles. Default 10, maximum 50. Used with <code>zip</code> or <code>lat</code>/<code>lng</code>.</td></tr>
+<tr><td><code>limit</code></td><td>Default 50, maximum 100.</td></tr>
+</table>
+
+<h3>Example (macOS, Linux, Windows <code>curl.exe</code>)</h3>
+<pre><code>curl -H "x-api-key: YOUR_KEY" \
+  "https://wjedvyqtqgvclxxsxyox.supabase.co/functions/v1/api/v1/parks?sport=tennis&amp;zip=92880&amp;limit=3"</code></pre>
+<h3>Example (PowerShell)</h3>
+<pre><code>Invoke-RestMethod -Uri "https://wjedvyqtqgvclxxsxyox.supabase.co/functions/v1/api/v1/parks?sport=tennis&amp;zip=92880&amp;limit=3" `
+  -Headers @{"x-api-key"="YOUR_KEY"} | ConvertTo-Json -Depth 5</code></pre>
+<h3>Response</h3>
+<pre><code>{
+  "data": [
+    {
+      "slug": "mountain-view-park",
+      "name": "Mountain View Park",
+      "sport": "tennis",
+      "courts": 2,
+      "lat": 33.9506,
+      "lng": -117.5997,
+      "distance_miles": 2.1,
+      "avg_playing": 8,
+      "avg_waiting": 4,
+      "max_playing": 8,
+      "max_waiting": 4,
+      "reports_in_window": 1
+    }
+  ],
+  "meta": {
+    "as_of": "2026-11-19T00:35:35.145Z",
+    "window_minutes": 120,
+    "attribution": "Data from CourtPulse (https://sudheerinampudi.github.io/courtpulse/)",
+    "count": 1,
+    "center": { "lat": 33.9208, "lng": -117.6096 },
+    "radius_miles": 10
+  }
+}</code></pre>
+
+<h2>Get one park</h2>
+<p><code>GET /v1/parks/{slug}?sport=tennis</code> returns a single park with the same fields, without <code>distance_miles</code>.</p>
+
+<h2>Reading the numbers</h2>
+<table>
+<tr><th>Field</th><th>Meaning</th></tr>
+<tr><td><code>avg_playing</code>, <code>avg_waiting</code></td><td>Average of player reports in the last <code>window_minutes</code> (currently 120).</td></tr>
+<tr><td><code>reports_in_window</code></td><td>How many reports the average is based on. <strong>0 means no recent data</strong>: treat the zeros as "unknown", not "empty courts".</td></tr>
+<tr><td><code>max_playing</code>, <code>max_waiting</code></td><td>Largest values a player can report: 4 playing and 2 waiting per court.</td></tr>
+<tr><td><code>distance_miles</code></td><td>Straight-line distance from the ZIP or coordinates. Only present on the list endpoint with a location.</td></tr>
+</table>
+<p class="muted">Counts are reported by players and are approximate. They can be wrong or out of date.</p>
+
+<h2>Errors</h2>
+<pre><code>{ "error": { "code": "invalid_key", "message": "That API key is not valid or has been revoked." } }</code></pre>
+<table>
+<tr><th>Status</th><th>Code</th><th>Meaning</th></tr>
+<tr><td>400</td><td><code>bad_sport</code>, <code>bad_zip</code></td><td>A parameter is invalid.</td></tr>
+<tr><td>401</td><td><code>missing_key</code>, <code>invalid_key</code></td><td>No key was sent, or it is wrong or revoked.</td></tr>
+<tr><td>404</td><td><code>not_found</code>, <code>park_not_found</code>, <code>zip_not_found</code></td><td>Unknown path, park or ZIP code.</td></tr>
+<tr><td>429</td><td><code>rate_limited</code></td><td>Too many requests. Wait about 30 seconds.</td></tr>
+<tr><td>500</td><td><code>server_error</code></td><td>Something went wrong on our side. Try again later.</td></tr>
+</table>
+</main></body></html>
