@@ -27,21 +27,21 @@ create policy "insert own arrival" on arrivals for insert to authenticated with 
 drop policy if exists "read own arrivals" on arrivals;
 create policy "read own arrivals" on arrivals for select to authenticated using (user_id = auth.uid());
 
--- Live counts: averages of the last 2 hours + people coming in the next hour (each player counted once, latest arrival).
+-- Live counts: averages of the last 2 hours + people coming later today (each player counted once, latest arrival).
 drop function if exists park_counts(text);
 create or replace function park_counts(p_sport text)
 returns table (slug text, name text, courts int, lat double precision, lng double precision,
-               avg_playing numeric, avg_waiting numeric, report_count bigint, arriving_next_hour bigint)
+               avg_playing numeric, avg_waiting numeric, report_count bigint, arriving_today bigint)
 language sql security definer set search_path = public as $$
   with coming as (
     select l.park_slug, count(*) as n
     from (
       select distinct on (park_slug, user_id) park_slug, user_id, arriving_at
       from arrivals
-      where sport = p_sport and created_at > now() - interval '12 hours'
+      where sport = p_sport and created_at >= (date_trunc('day', now() at time zone 'America/Los_Angeles') at time zone 'America/Los_Angeles')
       order by park_slug, user_id, created_at desc
     ) l
-    where l.arriving_at > now() and l.arriving_at <= now() + interval '1 hour'
+    where l.arriving_at > now() and l.arriving_at < ((date_trunc('day', now() at time zone 'America/Los_Angeles') + interval '1 day') at time zone 'America/Los_Angeles')
     group by l.park_slug
   )
   select p.slug, p.name,
@@ -86,7 +86,7 @@ language sql security definer set search_path = public as $$
   from (
     select distinct on (user_id) user_id, reporter_name, arriving_at
     from arrivals
-    where park_slug = p_slug and sport = p_sport and created_at > now() - interval '12 hours'
+    where park_slug = p_slug and sport = p_sport and created_at >= (date_trunc('day', now() at time zone 'America/Los_Angeles') at time zone 'America/Los_Angeles')
     order by user_id, created_at desc
   ) l
   where l.arriving_at > now()
