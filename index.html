@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CourtPulse: who's playing near you</title>
+<title>Play Pulse: who's playing near you</title>
 <link rel="icon" href="favicon.png?v=4"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -134,7 +134,7 @@ const comingTxt=n=>{n=Number(n)||0;return n>0?(n===1?'1 person':n+' people')+' c
 const ago=t=>{const m=Math.max(0,Math.round((Date.now()-new Date(t))/60000));return m<1?'just now':m<60?m+' min ago':Math.floor(m/60)+' hr ago'};
 function renderPark(){
   const feat=(rows||[]).find(r=>r.slug===slug);
-  let h=`<div class="topbar"><a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></a><a class="homebtn" href="./"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</a></div>
+  let h=`<div class="topbar"><a class="head" href="./" aria-label="Play Pulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">Play Pulse</b></a><a class="homebtn" href="./"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</a></div>
   <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>`;
   if(err)h+=`<div class="card" role="alert"><b>Couldn't load counts</b><div class="muted">${esc(err)}</div></div>`;
   else if(!rows)h+='<div class="muted">Loading…</div>';
@@ -174,7 +174,7 @@ function render(){
   const first=list[0]?list[0].slug:(rows&&rows[0]?rows[0].slug:'border-park');
   const feat=slug?(rows||[]).find(r=>r.slug===slug):null;
   if(feat)list=list.filter(r=>r.slug!==slug);
-  let h=`<div class="topbar"><div class="head"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></div>${profBtn(first)}</div>
+  let h=`<div class="topbar"><div class="head"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">Play Pulse</b></div>${profBtn(first)}</div>
   <div class="seg" role="group" aria-label="Sport"><button aria-pressed="${prefs.sport==='pickleball'}" data-sport="pickleball">${PB}Pickleball</button><button aria-pressed="${prefs.sport==='tennis'}" data-sport="tennis">${TN}Tennis</button></div>
   <a class="btn" href="checkin.html?park=${encodeURIComponent(first)}">Check in</a>
   <form id="zipf" class="zip"><input id="zip" inputmode="numeric" maxlength="5" placeholder="Enter ZIP code" aria-label="ZIP code" value="${esc(prefs.zip||'')}"><button class="go" type="submit">${located?'Change ZIP':'Find parks'}</button></form>

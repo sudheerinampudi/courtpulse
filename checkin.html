@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CourtPulse Check In</title>
+<title>Play Pulse Check In</title>
 <link rel="icon" href="favicon.png?v=4"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -48,7 +48,7 @@ let prefs={sport:'pickleball'};try{Object.assign(prefs,JSON.parse(localStorage.g
 const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{}')||{};localStorage.setItem('cn-prefs',JSON.stringify({...c,sport:prefs.sport}))}catch(e){}};
 const S={arrive:'',toastText:'Update shared',live:null,step:'loading',park:null,parks:[],picking:false,user:null,email:'',first:'',last:'',err:'',busy:false,lv:null,errCome:'',toast:false,recent:[]};
 let sb=null;
-const head=()=>`<div class="topbar"><a class="head" href="./" aria-label="CourtPulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">CourtPulse</b></a><a class="homebtn" href="./"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</a></div>`;
+const head=()=>`<div class="topbar"><a class="head" href="./" aria-label="Play Pulse home" style="text-decoration:none;color:inherit"><img src="icon.png?v=4" alt="" width="40" height="40"><b class="sg" style="font-size:20px">Play Pulse</b></a><a class="homebtn" href="./"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Home</a></div>`;
 const courts=()=>S.park?(prefs.sport==='tennis'?S.park.tennis_courts:S.park.pickleball_courts):0;
 const mp=()=>courts()*4,mw=()=>courts()*2;
 const LV=[{n:'Free',c:'#1F9D55'},{n:'Moderate',c:'#8AA81B'},{n:'Busy',c:'#E08A12'},{n:'Very busy',c:'#D23B2E'}];

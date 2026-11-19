@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CourtPulse API</title>
+<title>Play Pulse API</title>
 <link rel="icon" href="favicon.png?v=4"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=4">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -19,9 +19,9 @@ table{border-collapse:collapse;width:100%;background:#fff;border:1px solid var(-
 a{color:var(--green)}
 td{overflow-wrap:anywhere}th{white-space:nowrap}td code,th code{word-break:break-all}
 </style></head><body><main>
-<div class="topbar"><a class="head" href="./"><img src="icon.png?v=4" alt="">CourtPulse</a><a class="homebtn" href="./">Home</a></div>
+<div class="topbar"><a class="head" href="./"><img src="icon.png?v=4" alt="">Play Pulse</a><a class="homebtn" href="./">Home</a></div>
 
-<h1>CourtPulse API</h1>
+<h1>Play Pulse API</h1>
 <p class="muted">Live, crowd-reported player counts at tennis and pickleball courts. Read-only. Counts only: no names or emails. Version 1.</p>
 <p>By using the API you agree to the <a href="terms.html">API Terms of Use</a>. To request a key, contact <strong>[contact email]</strong>.</p>
 
@@ -31,7 +31,7 @@ td{overflow-wrap:anywhere}th{white-space:nowrap}td code,th code{word-break:break
 <tr><th>Authentication</th><td>Send your key in the <code>x-api-key</code> header on every request.</td></tr>
 <tr><th>Rate limit</th><td>60 requests per minute per key by default. Every response includes <code>X-RateLimit-Limit</code> and <code>X-RateLimit-Remaining</code>. Over the limit returns <code>429</code>.</td></tr>
 <tr><th>Format</th><td>JSON over HTTPS, <code>GET</code> only. Cross-origin requests (CORS) are allowed.</td></tr>
-<tr><th>Attribution</th><td>Please credit "Data from CourtPulse" with a link to <a href="./">this site</a>.</td></tr>
+<tr><th>Attribution</th><td>Please credit "Data from Play Pulse" with a link to <a href="./">this site</a>.</td></tr>
 </table>
 
 <h2>List parks</h2>
@@ -73,7 +73,7 @@ td{overflow-wrap:anywhere}th{white-space:nowrap}td code,th code{word-break:break
   "meta": {
     "as_of": "2026-11-19T00:35:35.145Z",
     "window_minutes": 120,
-    "attribution": "Data from CourtPulse (https://sudheerinampudi.github.io/courtpulse/)",
+    "attribution": "Data from Play Pulse (https://sudheerinampudi.github.io/courtpulse/)",
     "count": 1,
     "center": { "lat": 33.9208, "lng": -117.6096 },
     "radius_miles": 10

@@ -1,4 +1,4 @@
-// CourtPulse partner API (Supabase Edge Function named "api").
+// Play Pulse partner API (Supabase Edge Function named "api").
 // Endpoints (header  x-api-key: <key>):
 //   GET /functions/v1/api/v1/parks?sport=pickleball|tennis&zip=92880&radius=10&limit=50
 //   GET /functions/v1/api/v1/parks?sport=tennis&lat=33.95&lng=-117.58&radius=5
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     arriving_today: Number(r.arriving_today),
     reports_in_window: Number(r.report_count),
   });
-  const meta = { as_of: new Date().toISOString(), window_minutes: WINDOW_MIN, attribution: `Data from CourtPulse (${SITE})` };
+  const meta = { as_of: new Date().toISOString(), window_minutes: WINDOW_MIN, attribution: `Data from Play Pulse (${SITE})` };
 
   if (parts.length === 3) {
     const r = rows.find((x) => x.slug === parts[2]);

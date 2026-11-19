@@ -1,11 +1,11 @@
-# CourtPulse partner API (v1)
+# Play Pulse partner API (v1)
 
 Live, crowd-reported player counts at tennis and pickleball courts. Read-only. Counts only: no names or emails.
 
 **Base URL:** `https://wjedvyqtqgvclxxsxyox.supabase.co/functions/v1/api`
-**Auth:** send your key in the `x-api-key` header. Keys are issued by CourtPulse.
+**Auth:** send your key in the `x-api-key` header. Keys are issued by Play Pulse.
 **Limit:** 60 requests per minute per key by default. Responses carry `X-RateLimit-Limit` and `X-RateLimit-Remaining`; over the limit returns `429`.
-**Attribution:** please credit "Data from CourtPulse".
+**Attribution:** please credit "Data from Play Pulse".
 
 ## GET /v1/parks
 Query parameters:
@@ -33,7 +33,7 @@ curl -H "x-api-key: YOUR_KEY" \
     }
   ],
   "meta": { "as_of": "2026-11-18T23:10:00.000Z", "window_minutes": 120,
-            "attribution": "Data from CourtPulse (...)", "count": 1,
+            "attribution": "Data from Play Pulse (...)", "count": 1,
             "center": { "lat": 33.95, "lng": -117.58 }, "radius_miles": 5 }
 }
 ```
