@@ -44,3 +44,37 @@ language sql security definer set search_path = public as $$
   limit 30;
 $$;
 grant execute on function park_arrivals(text, text) to anon, authenticated;
+
+-- Guest contact details (nickname + email). Private: guests can add their own row, nobody can read them from the website.
+create table if not exists guest_contacts (
+  user_id uuid primary key default auth.uid() references auth.users(id) on delete cascade,
+  nickname text not null check (length(btrim(nickname)) between 2 and 20),
+  email text not null check (length(email) <= 254 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  created_at timestamptz not null default now()
+);
+alter table guest_contacts enable row level security;
+drop policy if exists "guest adds own contact" on guest_contacts;
+create policy "guest adds own contact" on guest_contacts for insert to authenticated
+  with check (user_id = auth.uid() and coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false));
+
+-- Show the full nickname for guests: "Pickle King (guest)"
+create or replace function park_arrivals(p_slug text, p_sport text)
+returns table (who text, arriving_at timestamptz)
+language sql security definer set search_path = public as $$
+  select case when l.is_guest then btrim(l.reporter_name) || ' (guest)'
+              else split_part(btrim(l.reporter_name), ' ', 1)
+                   || case when position(' ' in btrim(l.reporter_name)) > 0
+                           then ' ' || upper(left(regexp_replace(btrim(l.reporter_name), '^.*\s', ''), 1)) || '.' else '' end end,
+         l.arriving_at
+  from (
+    select distinct on (user_id) user_id, reporter_name, is_guest, arriving_at
+    from arrivals
+    where park_slug = p_slug and sport = p_sport
+      and created_at >= (date_trunc('day', now() at time zone 'America/Los_Angeles') at time zone 'America/Los_Angeles')
+    order by user_id, created_at desc
+  ) l
+  where l.arriving_at > now()
+  order by l.arriving_at
+  limit 30;
+$$;
+grant execute on function park_arrivals(text, text) to anon, authenticated;
