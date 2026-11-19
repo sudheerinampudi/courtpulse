@@ -131,8 +131,7 @@ function lvHint(i,courts){const cap=courts*4,a=Math.floor(cap*.25),b=Math.max(a+
  const r=(x,y)=>x>=y?`${y}`:`${x}-${y}`;
  return [`About ${r(0,a)} players`,`About ${r(a+1,b)} players`,`About ${r(b+1,top)} players`,'Courts full, people waiting'][i]}
 function meter(i){return `<div class="mtr" aria-hidden="true">${[0,1,2,3].map(k=>`<i style="${k<=i?'background:'+LV[i].c:''}"></i>`).join('')}</div>`}
-const SHARE_BASE=''; // set to your Cloudflare Worker address (no trailing slash) so WhatsApp shows live numbers in the link preview
-const waLink=f=>{const L=lvOf(f.avg_level),n=Number(f.arriving_today)||0,u=SHARE_BASE?SHARE_BASE+'/p/'+encodeURIComponent(f.slug)+'?t='+Math.floor(Date.now()/600000):location.origin+location.pathname+'?park='+encodeURIComponent(f.slug);
+const waLink=f=>{const L=lvOf(f.avg_level),n=Number(f.arriving_today)||0,u=location.origin+location.pathname+'?park='+encodeURIComponent(f.slug);
   const t=`🏓 ${f.name}: `+(L==null?'no recent reports yet':LV[L].n+' right now ('+lvHint(L,f.courts).toLowerCase()+')')+(n?`\n👥 ${n} ${n===1?'person':'people'} coming later today`:'')+`\nSee live updates: ${u}`;
   return 'https://wa.me/?text='+encodeURIComponent(t)};
 const comingTxt=n=>{n=Number(n)||0;return n>0?(n===1?'1 person':n+' people')+' coming later today':''};
