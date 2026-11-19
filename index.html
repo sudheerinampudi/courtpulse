@@ -162,7 +162,7 @@ async function doJoin(at,guestName,guestEmail){
   const t=new Date(at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});let name,sess=(await sb.auth.getSession()).data.session;
   if(user){const m=user.user_metadata||{};name=[m.first_name,m.last_name].filter(Boolean).join(' ')||(user.email||'').split('@')[0]}
   else{name=guestName||gName();
-    if(!sess){const r=await sb.auth.signInAnonymously({options:{data:{nickname:name}}});if(r.error){joinAsk=null;joinMsg='Guest joining is not available right now. Please sign in with email.';return render()}}
+    if(!sess){const r=await sb.auth.signInAnonymously({options:{data:{nickname:name}}});if(r.error){joinAsk=null;joinMsg='Guest joining is not available right now ('+(r.error.message||'unknown error')+'). Please sign in with email.';return render()}}
     const em=guestEmail||gEmail();if(em){const cr=await sb.from('guest_contacts').insert({nickname:name,email:em});if(cr.error&&cr.error.code!=='23505'){joinAsk=null;joinMsg='Could not save your details: '+cr.error.message;return render()}}}
   const {error}=await sb.from('arrivals').insert({park_slug:slug,sport:prefs.sport,reporter_name:name,arriving_at:at});
   joinAsk=null;joinMsg=error?'Could not join: '+error.message:"You're joining at "+t+'. See you there!';render();if(!error)load()}
