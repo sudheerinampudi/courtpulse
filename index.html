@@ -52,7 +52,7 @@ const savePrefs=()=>{try{const c=JSON.parse(localStorage.getItem('cn-prefs')||'{
 const miles=(a,b,c,d)=>{const R=3958.8,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
 let msg='';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let user=null,profOpen=false,pMsg='',pBusy=false;
+let joinMsg='',user=null,profOpen=false,pMsg='',pBusy=false;
 const nm=u=>{const m=(u&&u.user_metadata)||{};return {f:m.first_name||'',l:m.last_name||'',av:m.avatar_url||''}};
 const initials=u=>{const n=nm(u);const t=((n.f[0]||'')+(n.l[0]||'')).toUpperCase();return t||((u&&u.email||'?')[0]||'?').toUpperCase()};
 sb.auth.getSession().then(({data})=>{user=data&&data.session?data.session.user:null;render()}).catch(()=>{});
@@ -137,12 +137,20 @@ function renderPark(){
   else if(!feat)h+=`<div class="card"><b>No ${prefs.sport} courts here</b><div class="muted">Try the other sport, or find another park.</div></div>`;
   else{
     h+=`<div class="card feat"><div class="muted"><span class="live">Live</span> · ${feat.courts} ${prefs.sport} courts</div><b class="sg" style="font-size:22px">${esc(feat.name)}</b><div class="row2" style="align-items:flex-start"><div style="flex:1;min-width:150px">${(()=>{const L=lvOf(feat.avg_level);return L==null?'<div class="lvl" style="color:var(--muted)">No data</div><div class="muted">No recent reports</div>':`<div class="lvl" style="color:${LV[L].c}">${LV[L].n}</div>${meter(L)}<div class="muted" style="margin-top:4px">${lvHint(L,feat.courts)}</div>`})()}</div><div><div class="big" style="color:#2C5A12">${Number(feat.arriving_today)||0}</div><div class="muted">coming soon</div></div></div><div class="muted">${Number(feat.report_count)?'Average of '+Number(feat.report_count)+' report'+(feat.report_count==1?'':'s')+' in the last 2 hours':'No reports in the last 2 hours. Be the first!'}</div><a class="btn" href="checkin.html?park=${encodeURIComponent(slug)}">Report how busy</a></div>`;
-    if(arrs.length)h+=`<b class="sg">Coming soon</b>`+arrs.map(a=>`<div class="card" style="flex-direction:row;justify-content:space-between;align-items:center"><b>${esc(a.who)}</b><span class="muted">arriving ${new Date(a.arriving_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span></div>`).join('');
+    if(joinMsg)h+=`<div class="card" role="status" style="background:#EAF6C8;border-color:#C9E58A"><b>${esc(joinMsg)}</b></div>`;
+    if(arrs.length)h+=`<b class="sg">Coming soon</b>`+arrs.map((a,i)=>`<div class="card" style="flex-direction:row;justify-content:space-between;align-items:center;gap:10px"><div><b>${esc(a.who)}</b><div class="muted">arriving ${new Date(a.arriving_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</div></div><button type="button" class="btn alt" data-join="${i}" style="width:auto;padding:0 16px;min-height:40px;border-radius:20px">Join</button></div>`).join('');
     h+=`<b class="sg">Today's updates</b>`;
     h+=reps.length?reps.map(r=>`<div class="card" style="flex-direction:row;justify-content:space-between;align-items:center"><div><b>${esc(r.who)}</b><div class="muted">${ago(r.created_at)}</div></div><span class="muted">${r.level!=null?`<b style="color:${LV[r.level].c}">${LV[r.level].n}</b>`:`${r.playing} playing · ${r.waiting} waiting`}</span></div>`).join(''):'<div class="muted">No updates yet today.</div>';
   }
   app.innerHTML=h;
-  app.querySelectorAll('[data-sport]').forEach(b=>b.onclick=()=>{prefs.sport=b.dataset.sport;savePrefs();rows=null;reps=[];arrs=[];tried=true;render();load()});
+  app.querySelectorAll('[data-sport]').forEach(b=>b.onclick=()=>{prefs.sport=b.dataset.sport;savePrefs();rows=null;reps=[];arrs=[];tried=true;joinMsg='';render();load()});
+  app.querySelectorAll('[data-join]').forEach(b=>b.onclick=async()=>{const a=arrs[Number(b.dataset.join)];if(!a)return;
+    if(!user){location.href='checkin.html?park='+encodeURIComponent(slug)+'&join='+encodeURIComponent(a.arriving_at);return}
+    b.disabled=true;const m=(user.user_metadata)||{};const name=[m.first_name,m.last_name].filter(Boolean).join(' ')||(user.email||'').split('@')[0];
+    const {error}=await sb.from('arrivals').insert({park_slug:slug,sport:prefs.sport,reporter_name:name,arriving_at:a.arriving_at});
+    const t=new Date(a.arriving_at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+    joinMsg=error?'Could not join: '+error.message:"You're joining at "+t+'. See you there!';
+    render();if(!error)load()});
 }
 function render(){
   if(slug)return renderPark();

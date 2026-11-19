@@ -65,6 +65,7 @@ function suggestion(){const d=new Date(),h=d.getHours()+d.getMinutes()/60;
   const nx=d.getHours()+1;return nx>=24?null:String(nx).padStart(2,'0')+':00'}
 const t12=v=>{const [h,m]=v.split(':').map(Number),d=new Date();d.setHours(h,m,0,0);return d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})};
 const fmtT=t=>new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+S.joinNote='';{const j=new URLSearchParams(location.search).get('join');const d=j?new Date(j):null;if(d&&!isNaN(d)&&d.getTime()>Date.now()-10*60000){S.arrive=hhmm(d);S.joinNote='Joining at '+fmtT(d)+'. Tap I\'m coming to confirm.'}}
 const fullName=u=>{const m=u?.user_metadata||{};return [m.first_name,m.last_name].filter(Boolean).join(' ')||(u?.email||'').split('@')[0]};
 
 async function init(){
@@ -95,7 +96,7 @@ function render(){
  else if(S.step==='checkin'){
   h+=`<div class="muted">Signed in as ${esc(fullName(S.user))} · <button class="lnk" id="out">Sign out</button></div>
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div class="muted">Reporting for</div><b class="sg" style="font-size:17px">${esc(S.park.name)}</b><div class="muted">${courts()} ${prefs.sport} courts</div></div><button class="btn alt" id="chg" style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">${S.picking?'Close':'Change park'}</button></div>${S.picking?`<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${S.parks.map(p=>`<button class="btn alt" data-park="${esc(p.slug)}" style="text-align:left;padding:0 14px;${p.slug===S.park.slug?'border-color:var(--green);font-weight:700':''}">${esc(p.name)}</button>`).join('')}</div>`:''}</div>${sportSeg()}
-  <div class="card cnt"><b class="sg" style="font-size:16px">Coming later?</b><div class="muted" style="font-size:12px">Let others know when you plan to arrive. This is separate from the busy level.</div><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><input id="arr" type="time" aria-label="Estimated arrival time" value="${esc(S.arrive||suggestion()||'')}" style="flex:1;min-height:44px"><button class="btn alt" id="come" type="button" ${S.busy?'disabled':''} style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">I'm coming</button></div>${S.errCome?`<div class="err" role="alert">${esc(S.errCome)}</div>`:''}</div>
+  <div class="card cnt"><b class="sg" style="font-size:16px">Coming later?</b><div class="muted" style="font-size:12px">Let others know when you plan to arrive. This is separate from the busy level.</div>${S.joinNote?`<div style="color:#2C5A12;font-weight:600;font-size:13px">${esc(S.joinNote)}</div>`:''}<div style="display:flex;gap:8px;align-items:center;margin-top:4px"><input id="arr" type="time" aria-label="Estimated arrival time" value="${esc(S.arrive||suggestion()||'')}" style="flex:1;min-height:44px"><button class="btn alt" id="come" type="button" ${S.busy?'disabled':''} style="width:auto;padding:0 14px;min-height:44px;border-radius:22px">I'm coming</button></div>${S.errCome?`<div class="err" role="alert">${esc(S.errCome)}</div>`:''}</div>
   <div class="card cnt"><b class="sg" style="font-size:16px">How busy is it right now?</b><div class="lvs">${LV.map((l,k)=>`<button type="button" class="lvb" data-lv="${k}" ${S.busy?'disabled':''} aria-pressed="${S.lv===k}" style="${S.lv===k?'color:'+l.c:''}"><b style="color:${l.c}">${l.n}</b><span>${lvHint(k,courts())}</span></button>`).join('')}</div></div>
   <div class="err" role="alert">${esc(S.err)}</div><div class="muted" style="text-align:center">Tap a level to share it. Others see the average of recent updates.</div>
   ${S.recent.length?`<b class="sg">Today's updates</b>${S.recent.map(r=>`<div class="card" style="flex-direction:row;justify-content:space-between"><b>${esc(r.reporter_name)}</b><span class="muted">${r.level!=null?`<b style="color:${LV[r.level].c}">${LV[r.level].n}</b>`:`${r.playing} playing · ${r.waiting} waiting`}</span></div>`).join('')}`:''}`}
@@ -127,7 +128,7 @@ function wire(){
   S.busy=true;render();
   const {error}=await sb.from('arrivals').insert({park_slug:S.park.slug,sport:prefs.sport,reporter_name:fullName(S.user),arriving_at:d.toISOString()});
   S.busy=false;if(error){S.errCome=error.message;return render()}
-  S.arrive='';S.toastText='Arrival shared';S.toast=true;render();const p=$('#pill');setTimeout(()=>{p&&(p.style.opacity=0)},1800);setTimeout(()=>{S.toast=false;render()},2400)});
+  S.arrive='';S.joinNote='';S.toastText='Arrival shared';S.toast=true;render();const p=$('#pill');setTimeout(()=>{p&&(p.style.opacity=0)},1800);setTimeout(()=>{S.toast=false;render()},2400)});
  on('chg',()=>{S.picking=!S.picking;render()});
  app.querySelectorAll('[data-park]').forEach(b=>b.onclick=()=>{const p=S.parks.find(x=>x.slug===b.dataset.park);if(!p)return;S.park=p;S.picking=false;fixSport();S.recent=[];S.live=null;loadLive();S.lv=null;try{history.replaceState(null,'','?park='+encodeURIComponent(p.slug))}catch(e){}render();loadRecent()});
  on('back',()=>{S.step='signin';S.err='';render()});
